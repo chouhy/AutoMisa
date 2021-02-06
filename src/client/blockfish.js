@@ -1,4 +1,15 @@
 function suggest(stacker, callback) {
+    let request = {
+        config: {
+            nodeLimit: 100000,
+            suggestionLimit: 1,
+        },
+        snapshot: {
+            hold: stacker.hold,
+            queue: stacker.piece.type + stacker.queue,
+            matrix: stacker.matrix,
+        },
+    };
     let xhr = new XMLHttpRequest;
     xhr.open('POST', '/blockfish');
     xhr.onreadystatechange = () => {
@@ -12,17 +23,8 @@ function suggest(stacker, callback) {
             }
         }
     };
-    xhr.send({
-        config: {
-            nodeLimit: 100000,
-            suggestionLimit: 1,
-        },
-        snapshot: {
-            hold: stacker.hold,
-            queue: stacker.piece.type + stacker.queue,
-            matrix: stacker.matrix,
-        },
-    });
+    xhr.setRequestHeader("Content-Type", "application/json");
+    xhr.send(JSON.stringify(request));
 }
 
 module.exports = { suggest };
