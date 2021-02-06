@@ -1,7 +1,7 @@
 function suggest(stacker, callback) {
     let request = {
         config: {
-            nodeLimit: 100000,
+            nodeLimit: 20000,
             suggestionLimit: 1,
         },
         snapshot: {
@@ -14,7 +14,14 @@ function suggest(stacker, callback) {
     xhr.open('POST', '/blockfish');
     xhr.onreadystatechange = () => {
         if (xhr.readyState === XMLHttpRequest.DONE) {
-            let response = JSON.parse(xhr.responseText);
+            let response;
+            try {
+                response = JSON.parse(xhr.responseText);
+            } catch(e) {
+                console.log(xhr.responseText);
+                console.error(e);
+                return;
+            }
             if (xhr.status !== 200) {
                 let err = new Error(response.message);
                 callback(null, err);

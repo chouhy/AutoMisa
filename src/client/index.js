@@ -5,14 +5,6 @@ const blockfish = require('./blockfish');
 let stacker = new CheeseRaceStacker;
 stacker.spawn();
 
-blockfish.suggest(stacker, (sugg, err) => {
-    if (err !== null) {
-        console.error(err);
-        return;
-    }
-    console.log('blockfish suggestion: ', sugg);
-});
-
 let drawing = {
     container: document.body,
     matrix: document.getElementById('matrix'),
@@ -23,3 +15,26 @@ let drawing = {
 let view = new View(stacker, drawing);
 view.resize();
 view.draw();
+
+let inputs = [];
+
+function animate() {
+    if (inputs === null) {
+        return;
+    }
+    if (inputs.length === 0) {
+        inputs = null;
+        blockfish.suggest(stacker, (result, err) => {
+            let sugg = result.suggestions[0];
+            let newInputs = sugg.inputs;
+            let hd = newInputs.indexOf('hd');
+            inputs = newInputs.slice(0, hd + 1);
+            console.log(`rating: ${sugg.rating}`);
+        });
+        return;
+    }
+    stacker.apply(inputs.shift());
+    view.draw();
+}
+
+setInterval(animate, 100);

@@ -1,7 +1,7 @@
 {
     "previews": 5,
     "cheese": {
-        "min": 3,
+        "min": 4,
         "max": 9
     },
     "rows": 20,
