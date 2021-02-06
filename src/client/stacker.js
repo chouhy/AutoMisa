@@ -1,4 +1,4 @@
-const ruleset = require('./ruleset.json');
+const ruleset = require('./ruleset');
 
 class Stacker {
     constructor() {
@@ -7,6 +7,8 @@ class Stacker {
             hold: "",
             queue: "",
             piece: null,
+            comboing: false,
+            clear: 0,
         });
     }
 
@@ -23,10 +25,10 @@ class Stacker {
             return null;
         }
         let type = queue[0];
+        this.queue = queue.substring(1);
         let [x, y] = ruleset.shapes[type].spawn;
         let rotation = 'spawn';
         this.piece = { type, x, y, rotation, ghostY: null };
-        this.queue = queue.substring(1);
         this._computeGhost();
         return type;
     }
@@ -67,9 +69,20 @@ class Stacker {
             if (op === 'hd') {
                 this._lock();
             }
-            return true;
+            break;
 
-        default: return null;
+        default:
+            break;
+        }
+    }
+
+    _computeGhost() {
+        if (this.piece !== null) {
+            let ghost = Object.assign({}, this.piece);
+            while (!this._intersects(ghost)) {
+                ghost.y -= 1;
+            }
+            this.piece.ghostY = ghost.y + 1;
         }
     }
 
@@ -81,7 +94,7 @@ class Stacker {
             this.piece.x = x + dx;
             this.piece.y = y + dy;
             this.piece.rotation = r;
-            if (!this._intersects(this.peice)) {
+            if (!this._intersects(this.piece)) {
                 this._computeGhost();
                 return attempt;
             }
@@ -91,14 +104,6 @@ class Stacker {
         this.piece.y = y;
         this.piece.rotation = rotation;
         return null;
-    }
-
-    _computeGhost() {
-        let ghost = Object.assign({}, this.piece);
-        while (!this._intersects(ghost)) {
-            ghost.y -= 1;
-        }
-        this.piece.ghostY = ghost.y + 1;
     }
 
     _sonicDrop() {
@@ -118,6 +123,7 @@ class Stacker {
         }
         this.sift();
         this.spawn();
+        this.comboing = this.clear > 0;
     }
 
     _getMatrix(x, y) {
@@ -142,10 +148,12 @@ class Stacker {
     }
 
     sift() {
+        this.clear = 0;
         for (let y = 0; y < this.matrix.length; y++) {
             if (!this.matrix[y].includes('_')) {
                 this.matrix.splice(y, 1);
                 y -= 1;
+                this.clear++;
             }
         }
     }
@@ -212,4 +220,83 @@ function makeEmptyRow() {
 
 const EMPTY_ROW = makeEmptyRow();
 
-module.exports = { Stacker, minos, kicks };
+class RandomBagStacker extends Stacker {
+    constructor() {
+        super();
+        Object.assign(this, { _bag: [] })
+        this._refill();
+    }
+
+    spawn() {
+        super.spawn();
+        this._refill();
+    }
+
+    _refill() {
+        while (this.queue.length < ruleset.previews) {
+            if (this._bag.length === 0) {
+                this._bag = Object.keys(ruleset.shapes).slice(0);
+            }
+            let i = Math.floor(Math.random() * this._bag.length);
+            let type = this._bag.splice(i, 1)[0];
+            this.queue += type;
+        }
+    }
+}
+
+class CheeseRaceStacker extends RandomBagStacker {
+    constructor() {
+        super();
+        Object.assign(this, { _prevGarbageCol: null });
+        this._cheese();
+    }
+
+    apply(op) {
+        super.apply(op);
+        if (op === 'hd') {
+            this._cheese();
+        }
+    }
+
+    _cheese() {
+        let cheese = 0;
+        for (let row of this.matrix) {
+            if (row.includes('X')) {
+                cheese += 1;
+            }
+        }
+
+        let target = this.comboing ? ruleset.cheese.min : ruleset.cheese.max;
+        while (cheese < target) {
+            cheese += 1;
+            this._addGarbage(1);
+        }
+    }
+
+    _addGarbage(height) {
+        let col;
+        if (this._prevGarbageCol === null) {
+            col = Math.floor(Math.random() * ruleset.cols);
+        } else {
+            col = Math.floor(Math.random() * (ruleset.cols - 1));
+            col = (col + this._prevGarbageCol + 1) % ruleset.cols;
+        }
+        this._prevGarbageCol = col;
+
+        let line = '';
+        for (let i = 0; i < ruleset.cols; i++) {
+            line += (i === col) ? '_' : 'X';
+        }
+        for (let i = 0; i < height; i++) {
+            this.matrix.unshift(line);
+        }
+        this._computeGhost();
+    }
+}
+
+module.exports = {
+    Stacker,
+    RandomBagStacker,
+    CheeseRaceStacker,
+    minos
+};

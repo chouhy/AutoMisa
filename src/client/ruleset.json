@@ -1,4 +1,9 @@
 {
+    "previews": 5,
+    "cheese": {
+        "min": 3,
+        "max": 9
+    },
     "rows": 20,
     "cols": 10,
     "offsets": {

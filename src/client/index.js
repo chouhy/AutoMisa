@@ -1,20 +1,8 @@
+const { CheeseRaceStacker } = require('./stacker');
 const { View } = require('./view');
 
-let stacker = {
-    hold: "S",
-    queue: "ZIOJL",
-    matrix: [
-        "XXXXXXXX X",
-        "XXXX XXXXX",
-        " XXXXXXXXX",
-        "X XXXXXXXX",
-    ],
-    piece: {
-        type: "T",
-        rotation: "reverse",
-        x: 4, y: 19, ghostY: 5,
-    },
-};
+let stacker = new CheeseRaceStacker;
+stacker.spawn();
 
 let drawing = {
     container: document.body,
