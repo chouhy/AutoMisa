@@ -1,6 +1,6 @@
-const stacker = require('./stacker.js');
-const rules = require('./ruleset.json');
-const theme = require('./theme.json');
+const stacker = require('./stacker');
+const rules = require('./ruleset');
+const theme = require('./theme');
 
 const CELL = 30;
 
@@ -85,7 +85,7 @@ class View {
             for (let j = 0; j < rules.cols; j++) {
                 let x = j * CELL;
                 let c = matrix[i][j];
-                if (c == ' ') {
+                if (c == '_') {
                     continue;
                 }
                 ctx.fillStyle = theme.mino[c];
@@ -97,6 +97,10 @@ class View {
     _drawPiece() {
         let { ctx } = this.matrix;
         let { piece } = this.stacker;
+
+        if (piece === null) {
+            return;
+        }
 
         let coords = stacker.minos(piece).map(([dx, dy]) => {
             return [piece.x + dx, piece.y + dy, piece.ghostY + dy];
@@ -147,7 +151,7 @@ class View {
                 break;
             }
 
-            // -draw minos
+            // draw minos
             ctx.beginPath();
             for (let [x, y] of coords) {
                 let sx = (ox + x) * CELL;
