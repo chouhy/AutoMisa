@@ -1,0 +1,14 @@
+[Unit]
+Description=blockfish visualizer server
+Requires=network.target
+
+[Service]
+Type=simple
+Environment=PORT=80
+Environment=STATIC_FILES=/usr/share/blockfish-visualizer/www
+ExecStart=/usr/bin/node /usr/lib/node_modules/blockfish-visualizer
+Restart=on-failure
+RestartSec=2
+
+[Install]
+WantedBy=multi-user.target

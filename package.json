@@ -1,21 +1,22 @@
 {
-  "name": "mmc_site",
+  "name": "blockfish-visualizer",
   "version": "1.0.0",
-  "description": "MMC site",
-  "main": "app.js",
+  "description": "Blockfish visualizer server",
+  "main": "main.js",
   "scripts": {
-    "build": "mkdir -p build; npx browserify -e src/client -o build/client.js",
-    "start": "node app"
+    "build": "npx browserify -e src/client -o static/client.js"
   },
-  "author": "",
+  "author": "iitalics",
   "license": "ISC",
   "dependencies": {
     "express": "^4.17.1",
+    "blockfish": "file:./blockfish/blockfish-js"
+  },
+  "devDependencies": {
     "@babel/core": "7.12",
     "@babel/preset-env": "7.12",
     "babelify": "10.0",
-    "browserify": "17.0",
-    "blockfish": "file:../blockfish/blockfish-js"
+    "browserify": "17.0"
   },
   "browserify": {
     "transform": [
