@@ -15,6 +15,7 @@ class View {
         Object.assign(this, {
             stacker,
             container: drawing.container,
+            garbage: context('garbage'),
             matrix: context('matrix'),
             previews: context('previews'),
             hold: context('hold'),
@@ -24,6 +25,8 @@ class View {
     resize() {
         this.matrix.canvas.width = CELL * rules.cols;
         this.matrix.canvas.height = CELL * rules.rows;
+        this.garbage.canvas.width = 10;
+        this.garbage.canvas.height = CELL * rules.rows;
         this.previews.canvas.width = CELL * 4;
         this.previews.canvas.height = CELL * 3 * 5;
         this.hold.canvas.width = CELL * 4;
@@ -75,7 +78,16 @@ class View {
         ctx.strokeStyle = theme.grid[2];
         ctx.stroke();
     }
+    _drawGarbage() {
+        let { ctx } = this.garbage;
+        let { garbage } = this.stacker;
 
+        for (let i = 0; i < garbage; i++) {
+            let y = (rules.rows - i - 1) * CELL;
+            ctx.fillStyle = theme.garbage;
+            ctx.fillRect(0, y, 10, CELL);
+        }
+    }
     _drawMatrixCells() {
         let { ctx } = this.matrix;
         let { matrix } = this.stacker;
@@ -176,6 +188,8 @@ class View {
         this._drawGrid();
         this._drawMatrixCells();
         this._drawPiece();
+        this._clear(this.garbage);
+        this._drawGarbage();
         this._clear(this.hold);
         this._drawHold();
         this._clear(this.previews);

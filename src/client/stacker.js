@@ -9,13 +9,14 @@ class Stacker {
             piece: null,
             comboing: false,
             clear: 0,
+            garbage: 5,
         });
     }
 
     copy() {
-        let { matrix, hold, queue } = this;
+        let { matrix, hold, queue, garbage } = this;
         let piece = this.piece ? Object.assign({}, this.piece) : null;
-        return Object.assign(new Stacker, { matrix, hold, queue, piece });
+        return Object.assign(new Stacker, { matrix, hold, queue, piece, garbage });
     }
 
     spawn() {

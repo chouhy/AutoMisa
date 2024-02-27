@@ -8,6 +8,7 @@ stacker.spawn();
 let drawing = {
     container: document.body,
     matrix: document.getElementById('matrix'),
+    garbage: document.getElementById('garbage'),
     hold: document.getElementById('hold'),
     previews: document.getElementById('previews'),
 };

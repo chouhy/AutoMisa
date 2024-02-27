@@ -10,28 +10,6 @@ function suggest(stacker, callback) {
             matrix: stacker.matrix,
         },
     };
-    let xhr = new XMLHttpRequest;
-    xhr.open('POST', '/blockfish');
-    xhr.onreadystatechange = () => {
-        if (xhr.readyState === XMLHttpRequest.DONE) {
-            let response;
-            try {
-                response = JSON.parse(xhr.responseText);
-            } catch(e) {
-                console.log(xhr.responseText);
-                console.error(e);
-                return;
-            }
-            if (xhr.status !== 200) {
-                let err = new Error(response.message);
-                callback(null, err);
-            } else {
-                callback(response, null);
-            }
-        }
-    };
-    xhr.setRequestHeader("Content-Type", "application/json");
-    xhr.send(JSON.stringify(request));
 }
 
 module.exports = { suggest };
