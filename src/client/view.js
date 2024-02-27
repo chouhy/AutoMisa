@@ -25,7 +25,7 @@ class View {
     resize() {
         this.matrix.canvas.width = CELL * rules.cols;
         this.matrix.canvas.height = CELL * rules.rows;
-        this.garbage.canvas.width = 10;
+        this.garbage.canvas.width = CELL / 3;
         this.garbage.canvas.height = CELL * rules.rows;
         this.previews.canvas.width = CELL * 4;
         this.previews.canvas.height = CELL * 3 * 5;

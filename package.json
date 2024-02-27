@@ -1,12 +1,11 @@
 {
   "name": "blockfish-visualizer",
-  "version": "1.0.0",
-  "description": "Blockfish visualizer server",
-  "main": "main.js",
+  "version": "1.0.1-autoMisa",
+  "description": "Blockfish visualizer for autoMisa",
   "scripts": {
     "build": "npx browserify -e src/client -o static/client.js"
   },
-  "author": "iitalics",
+  "authors": ["iitalics", "chouhy"],
   "license": "ISC",
   "dependencies": {
     "express": "^4.17.1"
