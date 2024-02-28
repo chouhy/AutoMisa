@@ -1,6 +1,5 @@
 const { CheeseRaceStacker } = require('./stacker');
 const { View } = require('./view');
-const blockfish = require('./blockfish');
 
 let stacker = new CheeseRaceStacker;
 stacker.spawn();
@@ -25,13 +24,8 @@ function animate() {
     }
     if (inputs.length === 0) {
         inputs = null;
-        blockfish.suggest(stacker, (result, err) => {
-            let sugg = result.suggestions[0];
-            let newInputs = sugg.inputs;
-            let hd = newInputs.indexOf('hd');
-            inputs = newInputs.slice(0, hd + 1);
-            console.log(`rating: ${sugg.rating}`);
-        });
+        // send tbp request to bot
+        // do pathfinding to fill inputs
         return;
     }
     stacker.apply(inputs.shift());
