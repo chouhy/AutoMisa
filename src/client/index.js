@@ -3,7 +3,7 @@ const { View } = require('./view');
 
 let stacker = new CheeseRaceStacker;
 stacker.spawn();
-var a = new Worker("/build.emscripten/misaImport.js");
+var a = new Worker("./build.emscripten/misaImport.js");
 a.onmessage = (m) => {
     console.log(m.data);
 }
