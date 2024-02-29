@@ -9,7 +9,6 @@ class Stacker {
             piece: null,
             comboing: false,
             clear: 0,
-            garbage: 5,
         });
     }
 
@@ -245,6 +244,33 @@ class RandomBagStacker extends Stacker {
     }
 }
 
+class VSStacker extends RandomBagStacker {
+    constructor() {
+        super();
+        Object.assign(this, { garbage: []});
+    }
+    _addGarbage(height) {
+        let col = Math.floor(Math.random() * ruleset.cols);
+
+        let line = '';
+        for (let i = 0; i < ruleset.cols; i++) {
+            line += (i === col) ? '_' : 'X';
+        }
+        for (let i = 0; i < height; i++) {
+            this.matrix.unshift(line);
+        }
+        this._computeGhost();
+    }
+    apply(op) {
+        super.apply(op);
+        if (op === 'hd' && !this.comboing) {
+            while (this.garbage.length > 0) {
+                this._addGarbage(this.garbage.shift());
+            }
+        }
+    }
+}
+
 class CheeseRaceStacker extends RandomBagStacker {
     constructor() {
         super();
@@ -298,6 +324,7 @@ class CheeseRaceStacker extends RandomBagStacker {
 module.exports = {
     Stacker,
     RandomBagStacker,
+    VSStacker,
     CheeseRaceStacker,
     minos
 };

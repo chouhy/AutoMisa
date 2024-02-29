@@ -81,8 +81,11 @@ class View {
     _drawGarbage() {
         let { ctx } = this.garbage;
         let { garbage } = this.stacker;
-
-        for (let i = 0; i < garbage; i++) {
+        let garbageNum = garbage.reduce(
+            (accumulator, currentValue) => accumulator + currentValue,
+            0,
+          );
+        for (let i = 0; i < garbageNum; i++) {
             let y = (rules.rows - i - 1) * CELL;
             ctx.fillStyle = theme.garbage;
             ctx.fillRect(0, y, 10, CELL);

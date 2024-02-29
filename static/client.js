@@ -99,8 +99,7 @@ var Stacker = /*#__PURE__*/function () {
       queue: "",
       piece: null,
       comboing: false,
-      clear: 0,
-      garbage: 5
+      clear: 0
     });
   }
   _createClass(Stacker, [{
@@ -431,18 +430,56 @@ var RandomBagStacker = /*#__PURE__*/function (_Stacker) {
   }]);
   return RandomBagStacker;
 }(Stacker);
-var CheeseRaceStacker = /*#__PURE__*/function (_RandomBagStacker) {
-  _inherits(CheeseRaceStacker, _RandomBagStacker);
-  var _super2 = _createSuper(CheeseRaceStacker);
-  function CheeseRaceStacker() {
+var VSStacker = /*#__PURE__*/function (_RandomBagStacker) {
+  _inherits(VSStacker, _RandomBagStacker);
+  var _super2 = _createSuper(VSStacker);
+  function VSStacker() {
     var _this3;
-    _classCallCheck(this, CheeseRaceStacker);
+    _classCallCheck(this, VSStacker);
     _this3 = _super2.call(this);
     Object.assign(_assertThisInitialized(_this3), {
+      garbage: []
+    });
+    return _this3;
+  }
+  _createClass(VSStacker, [{
+    key: "_addGarbage",
+    value: function _addGarbage(height) {
+      var col = Math.floor(Math.random() * ruleset.cols);
+      var line = '';
+      for (var i = 0; i < ruleset.cols; i++) {
+        line += i === col ? '_' : 'X';
+      }
+      for (var _i2 = 0; _i2 < height; _i2++) {
+        this.matrix.unshift(line);
+      }
+      this._computeGhost();
+    }
+  }, {
+    key: "apply",
+    value: function apply(op) {
+      _get(_getPrototypeOf(VSStacker.prototype), "apply", this).call(this, op);
+      if (op === 'hd' && !this.comboing) {
+        while (this.garbage.length > 0) {
+          this._addGarbage(this.garbage.shift());
+        }
+      }
+    }
+  }]);
+  return VSStacker;
+}(RandomBagStacker);
+var CheeseRaceStacker = /*#__PURE__*/function (_RandomBagStacker2) {
+  _inherits(CheeseRaceStacker, _RandomBagStacker2);
+  var _super3 = _createSuper(CheeseRaceStacker);
+  function CheeseRaceStacker() {
+    var _this4;
+    _classCallCheck(this, CheeseRaceStacker);
+    _this4 = _super3.call(this);
+    Object.assign(_assertThisInitialized(_this4), {
       _prevGarbageCol: null
     });
-    _this3._cheese();
-    return _this3;
+    _this4._cheese();
+    return _this4;
   }
   _createClass(CheeseRaceStacker, [{
     key: "apply",
@@ -491,7 +528,7 @@ var CheeseRaceStacker = /*#__PURE__*/function (_RandomBagStacker) {
       for (var i = 0; i < ruleset.cols; i++) {
         line += i === col ? '_' : 'X';
       }
-      for (var _i2 = 0; _i2 < height; _i2++) {
+      for (var _i3 = 0; _i3 < height; _i3++) {
         this.matrix.unshift(line);
       }
       this._computeGhost();
@@ -502,6 +539,7 @@ var CheeseRaceStacker = /*#__PURE__*/function (_RandomBagStacker) {
 module.exports = {
   Stacker: Stacker,
   RandomBagStacker: RandomBagStacker,
+  VSStacker: VSStacker,
   CheeseRaceStacker: CheeseRaceStacker,
   minos: minos
 };
@@ -627,7 +665,10 @@ var View = /*#__PURE__*/function () {
     value: function _drawGarbage() {
       var ctx = this.garbage.ctx;
       var garbage = this.stacker.garbage;
-      for (var i = 0; i < garbage; i++) {
+      var garbageNum = garbage.reduce(function (accumulator, currentValue) {
+        return accumulator + currentValue;
+      }, 0);
+      for (var i = 0; i < garbageNum; i++) {
         var y = (rules.rows - i - 1) * CELL;
         ctx.fillStyle = theme.garbage;
         ctx.fillRect(0, y, 10, CELL);
@@ -794,15 +835,11 @@ module.exports = {
 "use strict";
 
 var _require = require('./stacker'),
-  CheeseRaceStacker = _require.CheeseRaceStacker;
+  VSStacker = _require.VSStacker;
 var _require2 = require('./view'),
   View = _require2.View;
-var stacker = new CheeseRaceStacker();
+var stacker = new VSStacker();
 stacker.spawn();
-var a = new Worker("./build.emscripten/misaImport.js");
-a.onmessage = function (m) {
-  console.log(m.data);
-};
 var drawing = {
   container: document.body,
   matrix: document.getElementById('matrix'),
@@ -813,6 +850,37 @@ var drawing = {
 var view = new View(stacker, drawing);
 view.resize();
 view.draw();
+var newGameMsg = {
+  "type": "start",
+  "hold": null,
+  "combo": 0,
+  "back_to_back": false,
+  "board": [[null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null]]
+};
+newGameMsg["queue"] = (stacker.piece.type + stacker.queue).split("");
+//"queue":["I","T","I","L","O","Z"]
+
+var bot = new Worker("./build.emscripten/misaImport.js");
+bot.onmessage = function (m) {
+  console.log(m.data);
+  switch (m.data.type) {
+    case "info":
+      bot.postMessage({
+        "type": "rules"
+      });
+      break;
+    case "ready":
+      bot.postMessage(newGameMsg);
+      setInterval(animate, 100);
+      break;
+    // do pathfinding and push to inputs then animate will process steps inside
+    case "suggestion":
+      console.log("a move");
+      break;
+    default:
+      break;
+  }
+};
 var inputs = [];
 function animate() {
   if (inputs === null) {
@@ -821,12 +889,13 @@ function animate() {
   if (inputs.length === 0) {
     inputs = null;
     // send tbp request to bot
-    // do pathfinding to fill inputs
+    bot.postMessage({
+      "type": "suggest"
+    });
     return;
   }
   stacker.apply(inputs.shift());
   view.draw();
 }
-setInterval(animate, 100);
 
 },{"./stacker":2,"./view":4}]},{},[5]);
