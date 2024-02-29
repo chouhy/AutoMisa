@@ -799,7 +799,7 @@ var _require2 = require('./view'),
   View = _require2.View;
 var stacker = new CheeseRaceStacker();
 stacker.spawn();
-var a = new Worker("/build.emscripten/misaImport.js");
+var a = new Worker("./build.emscripten/misaImport.js");
 a.onmessage = function (m) {
   console.log(m.data);
 };
