@@ -107,15 +107,13 @@ var Stacker = /*#__PURE__*/function () {
     value: function copy() {
       var matrix = this.matrix,
         hold = this.hold,
-        queue = this.queue,
-        garbage = this.garbage;
+        queue = this.queue;
       var piece = this.piece ? Object.assign({}, this.piece) : null;
       return Object.assign(new Stacker(), {
         matrix: matrix,
         hold: hold,
         queue: queue,
-        piece: piece,
-        garbage: garbage
+        piece: piece
       });
     }
   }, {
@@ -430,17 +428,172 @@ var RandomBagStacker = /*#__PURE__*/function (_Stacker) {
   }]);
   return RandomBagStacker;
 }(Stacker);
-var VSStacker = /*#__PURE__*/function (_RandomBagStacker) {
-  _inherits(VSStacker, _RandomBagStacker);
-  var _super2 = _createSuper(VSStacker);
-  function VSStacker() {
+var TBPorientationMapping = {
+  "north": "spawn",
+  "east": "right",
+  "south": "reverse",
+  "west": "left"
+};
+var reverseOp = {
+  "up": "sd",
+  "l": "right",
+  "r": "left",
+  "cw": "ccw",
+  "ccw": "cw"
+};
+var PathingFindingStacker = /*#__PURE__*/function (_RandomBagStacker) {
+  _inherits(PathingFindingStacker, _RandomBagStacker);
+  var _super2 = _createSuper(PathingFindingStacker);
+  function PathingFindingStacker() {
     var _this3;
-    _classCallCheck(this, VSStacker);
+    _classCallCheck(this, PathingFindingStacker);
     _this3 = _super2.call(this);
     Object.assign(_assertThisInitialized(_this3), {
-      garbage: []
+      _ops: ["up", "l", "r", "cw", "ccw"]
     });
     return _this3;
+  }
+  _createClass(PathingFindingStacker, [{
+    key: "_transformForPath",
+    value: function _transformForPath(piece, tfs) {
+      var x = piece.x,
+        y = piece.y,
+        rotation = piece.rotation;
+      var attempt = 0;
+      var _iterator3 = _createForOfIteratorHelper(tfs),
+        _step3;
+      try {
+        for (_iterator3.s(); !(_step3 = _iterator3.n()).done;) {
+          var _step3$value = _step3.value,
+            dx = _step3$value.dx,
+            dy = _step3$value.dy,
+            r = _step3$value.r;
+          attempt++;
+          piece.x = x + dx;
+          piece.y = y + dy;
+          piece.rotation = r;
+          if (!this._intersects(piece)) {
+            return attempt;
+          }
+        }
+        // reset since all attempts failed
+      } catch (err) {
+        _iterator3.e(err);
+      } finally {
+        _iterator3.f();
+      }
+      piece.x = x;
+      piece.y = y;
+      piece.rotation = rotation;
+      return null;
+    }
+  }, {
+    key: "_pathFinding",
+    value: function _pathFinding(curPiece, spawnPiece, test) {
+      if (curPiece.x == spawnPiece.x && curPiece.y == spawnPiece.y && curPiece.rotation == spawnPiece.rotation) return true;
+      var h = {
+        "l": -1,
+        "r": 1
+      };
+      do {
+        var originPiece = Object.assign({}, curPiece);
+        var _iterator4 = _createForOfIteratorHelper(this._ops),
+          _step4;
+        try {
+          for (_iterator4.s(); !(_step4 = _iterator4.n()).done;) {
+            var op = _step4.value;
+            if (test.length > 0 && (op == "l" && test.slice(-1) == "r" || op == "r" && test.slice(-1) == "l")) {
+              continue;
+            }
+            test.push(op);
+            if (op == "up" && curPiece.y < spawnPiece.y) {
+              curPiece.y++;
+              if (!this._intersects(curPiece)) {
+                if (this._pathFinding(curPiece, spawnPiece, test)) return true;
+              }
+              curPiece.y--;
+            }
+            if (op == "l" || op == "r") {
+              var offset = h[op];
+              curPiece.x += offset;
+              if (!this._intersects(curPiece)) {
+                if (this._pathFinding(curPiece, spawnPiece, test)) return true;
+              }
+              curPiece.x = originPiece.x;
+            }
+            if (op == "cw" || op == "ccw") {
+              var distance = Math.abs(spawnPiece.x - curPiece.x) + Math.abs(spawnPiece.y - curPiece.y);
+              if (this._transformForPath(curPiece, kicks(curPiece, op)) != null) {
+                var newDistance = Math.abs(spawnPiece.x - curPiece.x) + Math.abs(spawnPiece.y - curPiece.y);
+                if (distance >= newDistance && this._pathFinding(curPiece, spawnPiece, test)) return true;
+              }
+              curPiece = originPiece;
+            }
+            test.pop();
+          }
+        } catch (err) {
+          _iterator4.e(err);
+        } finally {
+          _iterator4.f();
+        }
+      } while (test.length > 0);
+      return false;
+    }
+  }, {
+    key: "pathFinding",
+    value: function pathFinding(location) {
+      var orientation = location.orientation,
+        type = location.type,
+        initX = location.x,
+        initY = location.y;
+      orientation = TBPorientationMapping[orientation];
+      var _ruleset$shapes$type$2 = _slicedToArray(ruleset.shapes[type].spawn, 2),
+        x = _ruleset$shapes$type$2[0],
+        y = _ruleset$shapes$type$2[1];
+      var rotation = 'spawn';
+      var spawnPiece = {
+        type: type,
+        x: x,
+        y: y,
+        rotation: rotation,
+        ghostY: null
+      };
+      var curPiece = {
+        type: type,
+        x: initX,
+        y: initY,
+        rotation: orientation,
+        ghostY: null
+      };
+      var test = [];
+      var steps = [];
+      if (this._pathFinding(curPiece, spawnPiece, test)) {
+        // reverse test ops and fill inputs
+        while (test.length > 0) {
+          var op = reverseOp[test.pop()];
+          if (op == "sd" && steps.length > 0 && steps.slice(-1) == "sd") continue;
+          steps.push(op);
+        }
+      }
+      if (steps.slice(-1) == "sd") steps.pop();
+      steps.push("hd");
+      console.log(steps);
+      return steps;
+    }
+  }]);
+  return PathingFindingStacker;
+}(RandomBagStacker);
+var VSStacker = /*#__PURE__*/function (_PathingFindingStacke) {
+  _inherits(VSStacker, _PathingFindingStacke);
+  var _super3 = _createSuper(VSStacker);
+  function VSStacker() {
+    var _this4;
+    _classCallCheck(this, VSStacker);
+    _this4 = _super3.call(this);
+    Object.assign(_assertThisInitialized(_this4), {
+      garbage: []
+    });
+    return _this4;
   }
   _createClass(VSStacker, [{
     key: "_addGarbage",
@@ -467,19 +620,19 @@ var VSStacker = /*#__PURE__*/function (_RandomBagStacker) {
     }
   }]);
   return VSStacker;
-}(RandomBagStacker);
+}(PathingFindingStacker);
 var CheeseRaceStacker = /*#__PURE__*/function (_RandomBagStacker2) {
   _inherits(CheeseRaceStacker, _RandomBagStacker2);
-  var _super3 = _createSuper(CheeseRaceStacker);
+  var _super4 = _createSuper(CheeseRaceStacker);
   function CheeseRaceStacker() {
-    var _this4;
+    var _this5;
     _classCallCheck(this, CheeseRaceStacker);
-    _this4 = _super3.call(this);
-    Object.assign(_assertThisInitialized(_this4), {
+    _this5 = _super4.call(this);
+    Object.assign(_assertThisInitialized(_this5), {
       _prevGarbageCol: null
     });
-    _this4._cheese();
-    return _this4;
+    _this5._cheese();
+    return _this5;
   }
   _createClass(CheeseRaceStacker, [{
     key: "apply",
@@ -493,19 +646,19 @@ var CheeseRaceStacker = /*#__PURE__*/function (_RandomBagStacker2) {
     key: "_cheese",
     value: function _cheese() {
       var cheese = 0;
-      var _iterator3 = _createForOfIteratorHelper(this.matrix),
-        _step3;
+      var _iterator5 = _createForOfIteratorHelper(this.matrix),
+        _step5;
       try {
-        for (_iterator3.s(); !(_step3 = _iterator3.n()).done;) {
-          var row = _step3.value;
+        for (_iterator5.s(); !(_step5 = _iterator5.n()).done;) {
+          var row = _step5.value;
           if (row.includes('X')) {
             cheese += 1;
           }
         }
       } catch (err) {
-        _iterator3.e(err);
+        _iterator5.e(err);
       } finally {
-        _iterator3.f();
+        _iterator5.f();
       }
       var target = this.comboing ? ruleset.cheese.min : ruleset.cheese.max;
       while (cheese < target) {
@@ -871,11 +1024,17 @@ bot.onmessage = function (m) {
       break;
     case "ready":
       bot.postMessage(newGameMsg);
+      bot.postMessage({
+        "type": "suggest"
+      });
       setInterval(animate, 100);
+      // animate();
       break;
     // do pathfinding and push to inputs then animate will process steps inside
     case "suggestion":
       console.log("a move");
+      // stacker.pathFinding(m.data.moves[0].location);
+      inputs = stacker.pathFinding(m.data.moves[0].location);
       break;
     default:
       break;
@@ -889,9 +1048,6 @@ function animate() {
   if (inputs.length === 0) {
     inputs = null;
     // send tbp request to bot
-    bot.postMessage({
-      "type": "suggest"
-    });
     return;
   }
   stacker.apply(inputs.shift());

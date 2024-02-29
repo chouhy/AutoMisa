@@ -29,11 +29,15 @@ bot.onmessage = (m) => {
             break;
         case "ready":
             bot.postMessage(newGameMsg);
+            bot.postMessage({"type":"suggest"});
             setInterval(animate, 100);
+            // animate();
             break;
         // do pathfinding and push to inputs then animate will process steps inside
         case "suggestion":
             console.log("a move");
+            // stacker.pathFinding(m.data.moves[0].location);
+            inputs = stacker.pathFinding(m.data.moves[0].location);
             break;
         default:
             break;
@@ -49,7 +53,6 @@ function animate() {
     if (inputs.length === 0) {
         inputs = null;
         // send tbp request to bot
-        bot.postMessage({"type":"suggest"});
         return;
     }
     stacker.apply(inputs.shift());
