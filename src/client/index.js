@@ -3,7 +3,10 @@ const { View } = require('./view');
 
 let stacker = new CheeseRaceStacker;
 stacker.spawn();
-
+var a = new Worker("/build.emscripten/misaImport.js");
+a.onmessage = (m) => {
+    console.log(m.data);
+}
 let drawing = {
     container: document.body,
     matrix: document.getElementById('matrix'),

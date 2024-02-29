@@ -1,24 +1,4 @@
 (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
-"use strict";
-
-function suggest(stacker, callback) {
-  var request = {
-    config: {
-      nodeLimit: 20000,
-      suggestionLimit: 1
-    },
-    snapshot: {
-      hold: stacker.hold,
-      queue: stacker.piece.type + stacker.queue,
-      matrix: stacker.matrix
-    }
-  };
-}
-module.exports = {
-  suggest: suggest
-};
-
-},{}],2:[function(require,module,exports){
 module.exports={
     "previews": 5,
     "cheese": {
@@ -86,7 +66,7 @@ module.exports={
     }
 }
 
-},{}],3:[function(require,module,exports){
+},{}],2:[function(require,module,exports){
 "use strict";
 
 function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
@@ -526,7 +506,7 @@ module.exports = {
   minos: minos
 };
 
-},{"./ruleset":2}],4:[function(require,module,exports){
+},{"./ruleset":1}],3:[function(require,module,exports){
 module.exports={
     "bg": "#000000",
     "grid": ["#101010", "#202020", "#404040"],
@@ -543,7 +523,7 @@ module.exports={
     }
 }
 
-},{}],5:[function(require,module,exports){
+},{}],4:[function(require,module,exports){
 "use strict";
 
 function _createForOfIteratorHelper(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (!it) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e2) { throw _e2; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = it.call(o); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e3) { didErr = true; err = _e3; }, f: function f() { try { if (!normalCompletion && it["return"] != null) it["return"](); } finally { if (didErr) throw err; } } }; }
@@ -810,16 +790,19 @@ module.exports = {
   View: View
 };
 
-},{"./ruleset":2,"./stacker":3,"./theme":4}],6:[function(require,module,exports){
+},{"./ruleset":1,"./stacker":2,"./theme":3}],5:[function(require,module,exports){
 "use strict";
 
 var _require = require('./stacker'),
   CheeseRaceStacker = _require.CheeseRaceStacker;
 var _require2 = require('./view'),
   View = _require2.View;
-var blockfish = require('./blockfish');
 var stacker = new CheeseRaceStacker();
 stacker.spawn();
+var a = new Worker("/build.emscripten/misaImport.js");
+a.onmessage = function (m) {
+  console.log(m.data);
+};
 var drawing = {
   container: document.body,
   matrix: document.getElementById('matrix'),
@@ -837,13 +820,8 @@ function animate() {
   }
   if (inputs.length === 0) {
     inputs = null;
-    blockfish.suggest(stacker, function (result, err) {
-      var sugg = result.suggestions[0];
-      var newInputs = sugg.inputs;
-      var hd = newInputs.indexOf('hd');
-      inputs = newInputs.slice(0, hd + 1);
-      console.log("rating: ".concat(sugg.rating));
-    });
+    // send tbp request to bot
+    // do pathfinding to fill inputs
     return;
   }
   stacker.apply(inputs.shift());
@@ -851,4 +829,4 @@ function animate() {
 }
 setInterval(animate, 100);
 
-},{"./blockfish":1,"./stacker":3,"./view":5}]},{},[6]);
+},{"./stacker":2,"./view":4}]},{},[5]);
