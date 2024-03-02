@@ -593,15 +593,20 @@ var TBPStacker = /*#__PURE__*/function (_VSStacker) {
     }
   }, {
     key: "convertBoard",
-    value: function convertBoard() {
-      var board = this.matrix.map(function (row) {
+    value: function convertBoard(board) {
+      var curBoard = this.matrix.map(function (row) {
         return row.split('').map(function (c) {
           if (c == "_") return null;
           if (c == "X") return "G";
           return c;
         });
       });
-      return board;
+      curBoard.forEach(function (r, row) {
+        r.forEach(function (c, col) {
+          board[row][col] = c;
+        });
+      });
+      return curBoard;
     }
   }, {
     key: "sift",
@@ -1119,14 +1124,17 @@ var gameMsg = {
   "hold": null,
   "combo": 0,
   "back_to_back": false,
-  "board": [[null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null]]
+  "board": getEmptyBoard()
 };
 gameMsg["queue"] = (stacker.piece.type + stacker.queue).split("");
 //"queue":["I","T","I","L","O","Z"]
-console.log(gameMsg.queue);
+console.log(gameMsg);
+function getEmptyBoard() {
+  return [[null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null]];
+}
 var bot = new Worker("./build.emscripten/misaImport.js");
 bot.onmessage = function (m) {
-  // console.log(m.data);
+  console.log(m.data);
   switch (m.data.type) {
     case "info":
       bot.postMessage({
@@ -1142,7 +1150,7 @@ bot.onmessage = function (m) {
     // do pathfinding and push to inputs then animate will process steps inside
     case "suggestion":
       var move = m.data.moves[0];
-      console.log(move);
+      // console.log(move);
       hold = stacker.hold;
       var steps = stacker.pathFinding(move.location, move.spin);
       bot.postMessage({
@@ -1161,7 +1169,6 @@ bot.onmessage = function (m) {
 //   console.log(this.id);
 //   bot.postMessage({"type":"suggest"});
 // });
-
 var inputs = null;
 function animate() {
   if (inputs === null) {
@@ -1176,14 +1183,22 @@ function animate() {
     // bot.postMessage({"type":"new_piece", "piece":stacker.queue.slice(-1)});
     // console.log("add peice "+ stacker.queue.slice(-1));
 
-    gameMsg["board"] = stacker.convertBoard();
+    gameMsg["board"] = getEmptyBoard();
+    var curBoard = stacker.convertBoard(gameMsg["board"]);
+    console.log("curBoard");
+    console.log(curBoard);
     gameMsg["back_to_back"] = stacker.b2b > 0;
     gameMsg["queue"] = (stacker.piece.type + stacker.queue).split("");
     gameMsg["combo"] = stacker.combos;
-    gameMsg["hold"] = stacker.hold;
+    gameMsg["hold"] = stacker.hold == '' ? null : stacker.hold;
+    console.log("update board");
+    console.log(gameMsg);
     // gameMsg["back_to_back_num"] = stacker.b2b;
     bot.postMessage(gameMsg);
+    // bot.postMessage({"type":"stop"});
     // send tbp request to bot
+    // count++;
+    // if (count < 6)
     bot.postMessage({
       "type": "suggest"
     });

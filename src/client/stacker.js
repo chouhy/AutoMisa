@@ -367,13 +367,18 @@ class TBPStacker extends VSStacker {
         this._spin = spin;
     }
 
-    convertBoard() {
-        let board = this.matrix.map(row => row.split('').map(c => {
+    convertBoard(board) {
+        let curBoard = this.matrix.map(row => row.split('').map(c => {
             if (c == "_") return null;
             if (c == "X") return "G";
             return c;
         }));
-        return board;
+        curBoard.forEach((r, row) => {
+            r.forEach((c, col) => {
+                board[row][col] = c;
+            });
+        });
+        return curBoard;
     }
     sift() {
         super.sift();

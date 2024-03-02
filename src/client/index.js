@@ -16,11 +16,17 @@ let view = new View(stacker, drawing);
 view.resize();
 view.draw();
 
-let gameMsg = {"type":"start","hold":null,"combo":0,"back_to_back":false,"board":[[null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null]]};
+let gameMsg = {"type":"start","hold":null,"combo":0,"back_to_back":false,"board":getEmptyBoard()};
 gameMsg["queue"] = (stacker.piece.type+stacker.queue).split("");
 //"queue":["I","T","I","L","O","Z"]
-console.log(gameMsg.queue);
+console.log(gameMsg);
+
+function getEmptyBoard() {
+    return [[null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null]];
+}
+
 let bot = new Worker("./build.emscripten/misaImport.js");
+
 bot.onmessage = (m) => {
     // console.log(m.data);
     switch (m.data.type) {
@@ -50,7 +56,6 @@ bot.onmessage = (m) => {
 //   console.log(this.id);
 //   bot.postMessage({"type":"suggest"});
 // });
-
 let inputs = null;
 function animate() {
     if (inputs === null) {
@@ -58,6 +63,9 @@ function animate() {
     }
     if (inputs.length === 0) {
         inputs = null;
+
+        // normal update
+
         // if (hold == '' && hold != stacker.hold) {
         //   console.log("add peice "+ stacker.queue.slice(-2) );
         //   bot.postMessage({"type":"new_piece", "piece":stacker.queue.slice(-2,-1)});
@@ -65,14 +73,27 @@ function animate() {
         // bot.postMessage({"type":"new_piece", "piece":stacker.queue.slice(-1)});
         // console.log("add peice "+ stacker.queue.slice(-1));
 
-        gameMsg["board"] = stacker.convertBoard();
-        gameMsg["back_to_back"] = stacker.b2b > 0;
-        gameMsg["queue"] = (stacker.piece.type+stacker.queue).split("");
-        gameMsg["combo"] = stacker.combos;
-        gameMsg["hold"] = stacker.hold;
-        // gameMsg["back_to_back_num"] = stacker.b2b;
-        bot.postMessage(gameMsg);
+        // update the whole board
+
+        // gameMsg["board"] = getEmptyBoard();
+        // let curBoard = stacker.convertBoard(gameMsg["board"]);
+        // console.log("curBoard");
+        // console.log(curBoard);
+        // gameMsg["back_to_back"] = stacker.b2b > 0;
+        // gameMsg["queue"] = (stacker.piece.type+stacker.queue).split("");
+        // gameMsg["combo"] = stacker.combos;
+        // gameMsg["hold"] = stacker.hold == '' ? null : stacker.hold;
+        // console.log("update board");
+        // console.log(gameMsg);
+        // // gameMsg["back_to_back_num"] = stacker.b2b;
+        // bot.postMessage(gameMsg);
+        // // bot.postMessage({"type":"stop"});
+
+
+
         // send tbp request to bot
+        // count++;
+        // if (count < 6)
         bot.postMessage({"type":"suggest"});
         return;
     }
