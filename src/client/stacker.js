@@ -263,7 +263,10 @@ const ops = ["up","l", "r", "cw", "ccw"];
 class VSStacker extends RandomBagStacker {
     constructor() {
         super();
-        Object.assign(this, { garbage: []});
+        Object.assign(this, { 
+            garbage: [],
+            combos: 0,
+        });
     }
     _addGarbage(height) {
         let col = Math.floor(Math.random() * ruleset.cols);
@@ -284,6 +287,11 @@ class VSStacker extends RandomBagStacker {
                 this._addGarbage(this.garbage.shift());
             }
         }
+    }
+    _lock() {
+        super._lock();
+        if (this.comboing) this.combos++;
+        else this.combos = 0;
     }
 }
 
@@ -337,22 +345,62 @@ class CheeseRaceStacker extends RandomBagStacker {
     }
 }
 
+const TBPB2B = {
+    "I" : true,
+    "T" : true
+}
+
 class TBPStacker extends VSStacker {
     constructor() {
         super();
-        Object.assign(this, { _targetPeice: null });
+        Object.assign(this, { 
+            _targetPeice: null,
+            b2b: 0,
+            _spin: "",
+        });
     }
-    pathFinding(location) {
+    pathFinding(location, spin) {
         let { orientation, type, x:initX, y:initY} = location;
         orientation = TBPorientationMapping[orientation];
         let curPiece = { type, x: initX, y: initY, rotation: orientation, ghostY: null };
         this._targetPeice = curPiece;
+        this._spin = spin;
     }
+
+    convertBoard() {
+        let board = this.matrix.map(row => row.split('').map(c => {
+            if (c == "_") return null;
+            if (c == "X") return "G";
+            return c;
+        }));
+        return board;
+    }
+    sift() {
+        super.sift();
+
+        if (this.clearline > 0) {
+            if (!TBPB2B[this.piece.type]) {
+                this.b2b = 0;
+            }
+            else {
+                if (this.piece.type == "I" && this.clearline < 4) {
+                    this.b2b = 0;
+                }
+                else if (this.piece.type == "T" && this._spin == "none") {
+                    this.b2b = 0;
+                }
+                else {
+                    this.b2b++;
+                }
+            }
+        }
+    }
+
 }
 
 class InstantMoveStacker extends TBPStacker {
-    pathFinding(location) {
-        super.pathFinding(location);
+    pathFinding(location, spin) {
+        super.pathFinding(location, spin);
         let targetPeice = this._targetPeice;
         let steps = [];
         if (this.piece.type != targetPeice.type) {

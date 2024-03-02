@@ -450,7 +450,8 @@ var VSStacker = /*#__PURE__*/function (_RandomBagStacker) {
     _classCallCheck(this, VSStacker);
     _this3 = _super2.call(this);
     Object.assign(_assertThisInitialized(_this3), {
-      garbage: []
+      garbage: [],
+      combos: 0
     });
     return _this3;
   }
@@ -476,6 +477,12 @@ var VSStacker = /*#__PURE__*/function (_RandomBagStacker) {
           this._addGarbage(this.garbage.shift());
         }
       }
+    }
+  }, {
+    key: "_lock",
+    value: function _lock() {
+      _get(_getPrototypeOf(VSStacker.prototype), "_lock", this).call(this);
+      if (this.comboing) this.combos++;else this.combos = 0;
     }
   }]);
   return VSStacker;
@@ -548,6 +555,10 @@ var CheeseRaceStacker = /*#__PURE__*/function (_RandomBagStacker2) {
   }]);
   return CheeseRaceStacker;
 }(RandomBagStacker);
+var TBPB2B = {
+  "I": true,
+  "T": true
+};
 var TBPStacker = /*#__PURE__*/function (_VSStacker) {
   _inherits(TBPStacker, _VSStacker);
   var _super4 = _createSuper(TBPStacker);
@@ -556,13 +567,15 @@ var TBPStacker = /*#__PURE__*/function (_VSStacker) {
     _classCallCheck(this, TBPStacker);
     _this5 = _super4.call(this);
     Object.assign(_assertThisInitialized(_this5), {
-      _targetPeice: null
+      _targetPeice: null,
+      b2b: 0,
+      _spin: ""
     });
     return _this5;
   }
   _createClass(TBPStacker, [{
     key: "pathFinding",
-    value: function pathFinding(location) {
+    value: function pathFinding(location, spin) {
       var orientation = location.orientation,
         type = location.type,
         initX = location.x,
@@ -576,6 +589,37 @@ var TBPStacker = /*#__PURE__*/function (_VSStacker) {
         ghostY: null
       };
       this._targetPeice = curPiece;
+      this._spin = spin;
+    }
+  }, {
+    key: "convertBoard",
+    value: function convertBoard() {
+      var board = this.matrix.map(function (row) {
+        return row.split('').map(function (c) {
+          if (c == "_") return null;
+          if (c == "X") return "G";
+          return c;
+        });
+      });
+      return board;
+    }
+  }, {
+    key: "sift",
+    value: function sift() {
+      _get(_getPrototypeOf(TBPStacker.prototype), "sift", this).call(this);
+      if (this.clearline > 0) {
+        if (!TBPB2B[this.piece.type]) {
+          this.b2b = 0;
+        } else {
+          if (this.piece.type == "I" && this.clearline < 4) {
+            this.b2b = 0;
+          } else if (this.piece.type == "T" && this._spin == "none") {
+            this.b2b = 0;
+          } else {
+            this.b2b++;
+          }
+        }
+      }
     }
   }]);
   return TBPStacker;
@@ -589,8 +633,8 @@ var InstantMoveStacker = /*#__PURE__*/function (_TBPStacker) {
   }
   _createClass(InstantMoveStacker, [{
     key: "pathFinding",
-    value: function pathFinding(location) {
-      _get(_getPrototypeOf(InstantMoveStacker.prototype), "pathFinding", this).call(this, location);
+    value: function pathFinding(location, spin) {
+      _get(_getPrototypeOf(InstantMoveStacker.prototype), "pathFinding", this).call(this, location, spin);
       var targetPeice = this._targetPeice;
       var steps = [];
       if (this.piece.type != targetPeice.type) {
@@ -1070,16 +1114,16 @@ var drawing = {
 var view = new View(stacker, drawing);
 view.resize();
 view.draw();
-var newGameMsg = {
+var gameMsg = {
   "type": "start",
   "hold": null,
   "combo": 0,
   "back_to_back": false,
   "board": [[null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null]]
 };
-newGameMsg["queue"] = (stacker.piece.type + stacker.queue).split("");
+gameMsg["queue"] = (stacker.piece.type + stacker.queue).split("");
 //"queue":["I","T","I","L","O","Z"]
-console.log(newGameMsg.queue);
+console.log(gameMsg.queue);
 var bot = new Worker("./build.emscripten/misaImport.js");
 bot.onmessage = function (m) {
   // console.log(m.data);
@@ -1090,7 +1134,7 @@ bot.onmessage = function (m) {
       });
       break;
     case "ready":
-      bot.postMessage(newGameMsg);
+      bot.postMessage(gameMsg);
       bot.postMessage({
         "type": "suggest"
       });
@@ -1098,9 +1142,9 @@ bot.onmessage = function (m) {
     // do pathfinding and push to inputs then animate will process steps inside
     case "suggestion":
       var move = m.data.moves[0];
-      console.log(move.location);
+      console.log(move);
       hold = stacker.hold;
-      var steps = stacker.pathFinding(move.location, view);
+      var steps = stacker.pathFinding(move.location, move.spin);
       bot.postMessage({
         "type": "play",
         "move": m.data.moves[0]
@@ -1125,18 +1169,20 @@ function animate() {
   }
   if (inputs.length === 0) {
     inputs = null;
-    if (hold == '' && hold != stacker.hold) {
-      console.log("add peice " + stacker.queue.slice(-2));
-      bot.postMessage({
-        "type": "new_piece",
-        "piece": stacker.queue.slice(-2, -1)
-      });
-    }
-    bot.postMessage({
-      "type": "new_piece",
-      "piece": stacker.queue.slice(-1)
-    });
-    console.log("add peice " + stacker.queue.slice(-1));
+    // if (hold == '' && hold != stacker.hold) {
+    //   console.log("add peice "+ stacker.queue.slice(-2) );
+    //   bot.postMessage({"type":"new_piece", "piece":stacker.queue.slice(-2,-1)});
+    // }
+    // bot.postMessage({"type":"new_piece", "piece":stacker.queue.slice(-1)});
+    // console.log("add peice "+ stacker.queue.slice(-1));
+
+    gameMsg["board"] = stacker.convertBoard();
+    gameMsg["back_to_back"] = stacker.b2b > 0;
+    gameMsg["queue"] = (stacker.piece.type + stacker.queue).split("");
+    gameMsg["combo"] = stacker.combos;
+    gameMsg["hold"] = stacker.hold;
+    // gameMsg["back_to_back_num"] = stacker.b2b;
+    bot.postMessage(gameMsg);
     // send tbp request to bot
     bot.postMessage({
       "type": "suggest"
