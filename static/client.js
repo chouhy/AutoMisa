@@ -441,33 +441,211 @@ var reverseOp = {
   "cw": "ccw",
   "ccw": "cw"
 };
-var PathingFindingStacker = /*#__PURE__*/function (_RandomBagStacker) {
-  _inherits(PathingFindingStacker, _RandomBagStacker);
-  var _super2 = _createSuper(PathingFindingStacker);
-  function PathingFindingStacker() {
+var ops = ["up", "l", "r", "cw", "ccw"];
+var VSStacker = /*#__PURE__*/function (_RandomBagStacker) {
+  _inherits(VSStacker, _RandomBagStacker);
+  var _super2 = _createSuper(VSStacker);
+  function VSStacker() {
     var _this3;
-    _classCallCheck(this, PathingFindingStacker);
+    _classCallCheck(this, VSStacker);
     _this3 = _super2.call(this);
     Object.assign(_assertThisInitialized(_this3), {
-      _ops: ["up", "l", "r", "cw", "ccw"]
+      garbage: []
     });
     return _this3;
   }
-  _createClass(PathingFindingStacker, [{
+  _createClass(VSStacker, [{
+    key: "_addGarbage",
+    value: function _addGarbage(height) {
+      var col = Math.floor(Math.random() * ruleset.cols);
+      var line = '';
+      for (var i = 0; i < ruleset.cols; i++) {
+        line += i === col ? '_' : 'X';
+      }
+      for (var _i2 = 0; _i2 < height; _i2++) {
+        this.matrix.unshift(line);
+      }
+      this._computeGhost();
+    }
+  }, {
+    key: "apply",
+    value: function apply(op) {
+      _get(_getPrototypeOf(VSStacker.prototype), "apply", this).call(this, op);
+      if (op === 'hd' && !this.comboing) {
+        while (this.garbage.length > 0) {
+          this._addGarbage(this.garbage.shift());
+        }
+      }
+    }
+  }]);
+  return VSStacker;
+}(RandomBagStacker);
+var CheeseRaceStacker = /*#__PURE__*/function (_RandomBagStacker2) {
+  _inherits(CheeseRaceStacker, _RandomBagStacker2);
+  var _super3 = _createSuper(CheeseRaceStacker);
+  function CheeseRaceStacker() {
+    var _this4;
+    _classCallCheck(this, CheeseRaceStacker);
+    _this4 = _super3.call(this);
+    Object.assign(_assertThisInitialized(_this4), {
+      _prevGarbageCol: null
+    });
+    _this4._cheese();
+    return _this4;
+  }
+  _createClass(CheeseRaceStacker, [{
+    key: "apply",
+    value: function apply(op) {
+      _get(_getPrototypeOf(CheeseRaceStacker.prototype), "apply", this).call(this, op);
+      if (op === 'hd') {
+        this._cheese();
+      }
+    }
+  }, {
+    key: "_cheese",
+    value: function _cheese() {
+      var cheese = 0;
+      var _iterator3 = _createForOfIteratorHelper(this.matrix),
+        _step3;
+      try {
+        for (_iterator3.s(); !(_step3 = _iterator3.n()).done;) {
+          var row = _step3.value;
+          if (row.includes('X')) {
+            cheese += 1;
+          }
+        }
+      } catch (err) {
+        _iterator3.e(err);
+      } finally {
+        _iterator3.f();
+      }
+      var target = this.comboing ? ruleset.cheese.min : ruleset.cheese.max;
+      while (cheese < target) {
+        cheese += 1;
+        this._addGarbage(1);
+      }
+    }
+  }, {
+    key: "_addGarbage",
+    value: function _addGarbage(height) {
+      var col;
+      if (this._prevGarbageCol === null) {
+        col = Math.floor(Math.random() * ruleset.cols);
+      } else {
+        col = Math.floor(Math.random() * (ruleset.cols - 1));
+        col = (col + this._prevGarbageCol + 1) % ruleset.cols;
+      }
+      this._prevGarbageCol = col;
+      var line = '';
+      for (var i = 0; i < ruleset.cols; i++) {
+        line += i === col ? '_' : 'X';
+      }
+      for (var _i3 = 0; _i3 < height; _i3++) {
+        this.matrix.unshift(line);
+      }
+      this._computeGhost();
+    }
+  }]);
+  return CheeseRaceStacker;
+}(RandomBagStacker);
+var TBPStacker = /*#__PURE__*/function (_VSStacker) {
+  _inherits(TBPStacker, _VSStacker);
+  var _super4 = _createSuper(TBPStacker);
+  function TBPStacker() {
+    var _this5;
+    _classCallCheck(this, TBPStacker);
+    _this5 = _super4.call(this);
+    Object.assign(_assertThisInitialized(_this5), {
+      _targetPeice: null
+    });
+    return _this5;
+  }
+  _createClass(TBPStacker, [{
+    key: "pathFinding",
+    value: function pathFinding(location) {
+      var orientation = location.orientation,
+        type = location.type,
+        initX = location.x,
+        initY = location.y;
+      orientation = TBPorientationMapping[orientation];
+      var curPiece = {
+        type: type,
+        x: initX,
+        y: initY,
+        rotation: orientation,
+        ghostY: null
+      };
+      this._targetPeice = curPiece;
+    }
+  }]);
+  return TBPStacker;
+}(VSStacker);
+var InstantMoveStacker = /*#__PURE__*/function (_TBPStacker) {
+  _inherits(InstantMoveStacker, _TBPStacker);
+  var _super5 = _createSuper(InstantMoveStacker);
+  function InstantMoveStacker() {
+    _classCallCheck(this, InstantMoveStacker);
+    return _super5.apply(this, arguments);
+  }
+  _createClass(InstantMoveStacker, [{
+    key: "pathFinding",
+    value: function pathFinding(location) {
+      _get(_getPrototypeOf(InstantMoveStacker.prototype), "pathFinding", this).call(this, location);
+      var targetPeice = this._targetPeice;
+      var steps = [];
+      if (this.piece.type != targetPeice.type) {
+        steps.push("hold");
+      }
+      if (targetPeice.rotation == "right") {
+        steps.push("cw");
+      }
+      if (targetPeice.rotation == "left") {
+        steps.push("ccw");
+      }
+      if (targetPeice.rotation == "reverse") {
+        steps.push("cw");
+        steps.push("cw");
+      }
+      steps.push("im");
+      steps.push("hd");
+      console.log("move create");
+      return steps;
+    }
+  }, {
+    key: "apply",
+    value: function apply(op) {
+      _get(_getPrototypeOf(InstantMoveStacker.prototype), "apply", this).call(this, op);
+      if (op == "im") {
+        this.piece.x = this._targetPeice.x;
+        this.piece.y = this._targetPeice.y;
+        this._computeGhost();
+      }
+    }
+  }]);
+  return InstantMoveStacker;
+}(TBPStacker);
+var PathFindingStacker = /*#__PURE__*/function (_VSStacker2) {
+  _inherits(PathFindingStacker, _VSStacker2);
+  var _super6 = _createSuper(PathFindingStacker);
+  function PathFindingStacker() {
+    _classCallCheck(this, PathFindingStacker);
+    return _super6.apply(this, arguments);
+  }
+  _createClass(PathFindingStacker, [{
     key: "_transformForPath",
     value: function _transformForPath(piece, tfs) {
       var x = piece.x,
         y = piece.y,
         rotation = piece.rotation;
       var attempt = 0;
-      var _iterator3 = _createForOfIteratorHelper(tfs),
-        _step3;
+      var _iterator4 = _createForOfIteratorHelper(tfs),
+        _step4;
       try {
-        for (_iterator3.s(); !(_step3 = _iterator3.n()).done;) {
-          var _step3$value = _step3.value,
-            dx = _step3$value.dx,
-            dy = _step3$value.dy,
-            r = _step3$value.r;
+        for (_iterator4.s(); !(_step4 = _iterator4.n()).done;) {
+          var _step4$value = _step4.value,
+            dx = _step4$value.dx,
+            dy = _step4$value.dy,
+            r = _step4$value.r;
           attempt++;
           piece.x = x + dx;
           piece.y = y + dy;
@@ -478,9 +656,9 @@ var PathingFindingStacker = /*#__PURE__*/function (_RandomBagStacker) {
         }
         // reset since all attempts failed
       } catch (err) {
-        _iterator3.e(err);
+        _iterator4.e(err);
       } finally {
-        _iterator3.f();
+        _iterator4.f();
       }
       piece.x = x;
       piece.y = y;
@@ -497,44 +675,36 @@ var PathingFindingStacker = /*#__PURE__*/function (_RandomBagStacker) {
       };
       do {
         var originPiece = Object.assign({}, curPiece);
-        var _iterator4 = _createForOfIteratorHelper(this._ops),
-          _step4;
-        try {
-          for (_iterator4.s(); !(_step4 = _iterator4.n()).done;) {
-            var op = _step4.value;
-            if (test.length > 0 && (op == "l" && test.slice(-1) == "r" || op == "r" && test.slice(-1) == "l")) {
-              continue;
-            }
-            test.push(op);
-            if (op == "up" && curPiece.y < spawnPiece.y) {
-              curPiece.y++;
-              if (!this._intersects(curPiece)) {
-                if (this._pathFinding(curPiece, spawnPiece, test)) return true;
-              }
-              curPiece.y--;
-            }
-            if (op == "l" || op == "r") {
-              var offset = h[op];
-              curPiece.x += offset;
-              if (!this._intersects(curPiece)) {
-                if (this._pathFinding(curPiece, spawnPiece, test)) return true;
-              }
-              curPiece.x = originPiece.x;
-            }
-            if (op == "cw" || op == "ccw") {
-              var distance = Math.abs(spawnPiece.x - curPiece.x) + Math.abs(spawnPiece.y - curPiece.y);
-              if (this._transformForPath(curPiece, kicks(curPiece, op)) != null) {
-                var newDistance = Math.abs(spawnPiece.x - curPiece.x) + Math.abs(spawnPiece.y - curPiece.y);
-                if (distance >= newDistance && this._pathFinding(curPiece, spawnPiece, test)) return true;
-              }
-              curPiece = originPiece;
-            }
-            test.pop();
+        for (var _i4 = 0, _ops = ops; _i4 < _ops.length; _i4++) {
+          var op = _ops[_i4];
+          if (test.length > 0 && (op == "l" && test.slice(-1) == "r" || op == "r" && test.slice(-1) == "l")) {
+            continue;
           }
-        } catch (err) {
-          _iterator4.e(err);
-        } finally {
-          _iterator4.f();
+          test.push(op);
+          if (op == "up" && curPiece.y < spawnPiece.y) {
+            curPiece.y++;
+            if (!this._intersects(curPiece)) {
+              if (this._pathFinding(curPiece, spawnPiece, test)) return true;
+            }
+            curPiece.y--;
+          }
+          if (op == "l" || op == "r") {
+            var offset = h[op];
+            curPiece.x += offset;
+            if (!this._intersects(curPiece)) {
+              if (this._pathFinding(curPiece, spawnPiece, test)) return true;
+            }
+            curPiece.x = originPiece.x;
+          }
+          if (op == "cw" || op == "ccw") {
+            var distance = Math.abs(spawnPiece.x - curPiece.x) + Math.abs(spawnPiece.y - curPiece.y);
+            if (this._transformForPath(curPiece, kicks(curPiece, op)) != null) {
+              var newDistance = Math.abs(spawnPiece.x - curPiece.x) + Math.abs(spawnPiece.y - curPiece.y);
+              if (distance >= newDistance && this._pathFinding(curPiece, spawnPiece, test)) return true;
+            }
+            curPiece = originPiece;
+          }
+          test.pop();
         }
       } while (test.length > 0);
       return false;
@@ -581,118 +751,14 @@ var PathingFindingStacker = /*#__PURE__*/function (_RandomBagStacker) {
       return steps;
     }
   }]);
-  return PathingFindingStacker;
-}(RandomBagStacker);
-var VSStacker = /*#__PURE__*/function (_PathingFindingStacke) {
-  _inherits(VSStacker, _PathingFindingStacke);
-  var _super3 = _createSuper(VSStacker);
-  function VSStacker() {
-    var _this4;
-    _classCallCheck(this, VSStacker);
-    _this4 = _super3.call(this);
-    Object.assign(_assertThisInitialized(_this4), {
-      garbage: []
-    });
-    return _this4;
-  }
-  _createClass(VSStacker, [{
-    key: "_addGarbage",
-    value: function _addGarbage(height) {
-      var col = Math.floor(Math.random() * ruleset.cols);
-      var line = '';
-      for (var i = 0; i < ruleset.cols; i++) {
-        line += i === col ? '_' : 'X';
-      }
-      for (var _i2 = 0; _i2 < height; _i2++) {
-        this.matrix.unshift(line);
-      }
-      this._computeGhost();
-    }
-  }, {
-    key: "apply",
-    value: function apply(op) {
-      _get(_getPrototypeOf(VSStacker.prototype), "apply", this).call(this, op);
-      if (op === 'hd' && !this.comboing) {
-        while (this.garbage.length > 0) {
-          this._addGarbage(this.garbage.shift());
-        }
-      }
-    }
-  }]);
-  return VSStacker;
-}(PathingFindingStacker);
-var CheeseRaceStacker = /*#__PURE__*/function (_RandomBagStacker2) {
-  _inherits(CheeseRaceStacker, _RandomBagStacker2);
-  var _super4 = _createSuper(CheeseRaceStacker);
-  function CheeseRaceStacker() {
-    var _this5;
-    _classCallCheck(this, CheeseRaceStacker);
-    _this5 = _super4.call(this);
-    Object.assign(_assertThisInitialized(_this5), {
-      _prevGarbageCol: null
-    });
-    _this5._cheese();
-    return _this5;
-  }
-  _createClass(CheeseRaceStacker, [{
-    key: "apply",
-    value: function apply(op) {
-      _get(_getPrototypeOf(CheeseRaceStacker.prototype), "apply", this).call(this, op);
-      if (op === 'hd') {
-        this._cheese();
-      }
-    }
-  }, {
-    key: "_cheese",
-    value: function _cheese() {
-      var cheese = 0;
-      var _iterator5 = _createForOfIteratorHelper(this.matrix),
-        _step5;
-      try {
-        for (_iterator5.s(); !(_step5 = _iterator5.n()).done;) {
-          var row = _step5.value;
-          if (row.includes('X')) {
-            cheese += 1;
-          }
-        }
-      } catch (err) {
-        _iterator5.e(err);
-      } finally {
-        _iterator5.f();
-      }
-      var target = this.comboing ? ruleset.cheese.min : ruleset.cheese.max;
-      while (cheese < target) {
-        cheese += 1;
-        this._addGarbage(1);
-      }
-    }
-  }, {
-    key: "_addGarbage",
-    value: function _addGarbage(height) {
-      var col;
-      if (this._prevGarbageCol === null) {
-        col = Math.floor(Math.random() * ruleset.cols);
-      } else {
-        col = Math.floor(Math.random() * (ruleset.cols - 1));
-        col = (col + this._prevGarbageCol + 1) % ruleset.cols;
-      }
-      this._prevGarbageCol = col;
-      var line = '';
-      for (var i = 0; i < ruleset.cols; i++) {
-        line += i === col ? '_' : 'X';
-      }
-      for (var _i3 = 0; _i3 < height; _i3++) {
-        this.matrix.unshift(line);
-      }
-      this._computeGhost();
-    }
-  }]);
-  return CheeseRaceStacker;
-}(RandomBagStacker);
+  return PathFindingStacker;
+}(VSStacker);
 module.exports = {
   Stacker: Stacker,
   RandomBagStacker: RandomBagStacker,
   VSStacker: VSStacker,
+  InstantMoveStacker: InstantMoveStacker,
+  PathFindingStacker: PathFindingStacker,
   CheeseRaceStacker: CheeseRaceStacker,
   minos: minos
 };
@@ -988,11 +1054,12 @@ module.exports = {
 "use strict";
 
 var _require = require('./stacker'),
-  VSStacker = _require.VSStacker;
+  InstantMoveStacker = _require.InstantMoveStacker;
 var _require2 = require('./view'),
   View = _require2.View;
-var stacker = new VSStacker();
+var stacker = new InstantMoveStacker();
 stacker.spawn();
+var hold = null;
 var drawing = {
   container: document.body,
   matrix: document.getElementById('matrix'),
@@ -1012,10 +1079,10 @@ var newGameMsg = {
 };
 newGameMsg["queue"] = (stacker.piece.type + stacker.queue).split("");
 //"queue":["I","T","I","L","O","Z"]
-
+console.log(newGameMsg.queue);
 var bot = new Worker("./build.emscripten/misaImport.js");
 bot.onmessage = function (m) {
-  console.log(m.data);
+  // console.log(m.data);
   switch (m.data.type) {
     case "info":
       bot.postMessage({
@@ -1027,31 +1094,59 @@ bot.onmessage = function (m) {
       bot.postMessage({
         "type": "suggest"
       });
-      setInterval(animate, 100);
-      // animate();
       break;
     // do pathfinding and push to inputs then animate will process steps inside
     case "suggestion":
-      console.log("a move");
-      // stacker.pathFinding(m.data.moves[0].location);
-      inputs = stacker.pathFinding(m.data.moves[0].location);
+      var move = m.data.moves[0];
+      console.log(move.location);
+      hold = stacker.hold;
+      var steps = stacker.pathFinding(move.location, view);
+      bot.postMessage({
+        "type": "play",
+        "move": m.data.moves[0]
+      });
+      steps.push("delay");
+      inputs = steps;
       break;
     default:
       break;
   }
 };
-var inputs = [];
+
+// document.getElementById("next").addEventListener("click", function() {
+//   console.log(this.id);
+//   bot.postMessage({"type":"suggest"});
+// });
+
+var inputs = null;
 function animate() {
   if (inputs === null) {
     return;
   }
   if (inputs.length === 0) {
     inputs = null;
+    if (hold == '' && hold != stacker.hold) {
+      console.log("add peice " + stacker.queue.slice(-2));
+      bot.postMessage({
+        "type": "new_piece",
+        "piece": stacker.queue.slice(-2, -1)
+      });
+    }
+    bot.postMessage({
+      "type": "new_piece",
+      "piece": stacker.queue.slice(-1)
+    });
+    console.log("add peice " + stacker.queue.slice(-1));
     // send tbp request to bot
+    bot.postMessage({
+      "type": "suggest"
+    });
     return;
   }
+  // inputs.shift();
   stacker.apply(inputs.shift());
   view.draw();
 }
+setInterval(animate, 100);
 
 },{"./stacker":2,"./view":4}]},{},[5]);
