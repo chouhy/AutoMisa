@@ -82,7 +82,7 @@ class View {
         let { ctx } = this.garbage;
         let { garbage } = this.stacker;
         let garbageNum = garbage.reduce(
-            (accumulator, currentValue) => accumulator + currentValue,
+            (accumulator, currentValue) => accumulator + currentValue.height,
             0,
           );
         for (let i = 0; i < garbageNum; i++) {

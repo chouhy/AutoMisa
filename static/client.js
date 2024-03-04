@@ -70,6 +70,10 @@ module.exports={
 "use strict";
 
 function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
+function _toConsumableArray(arr) { return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _unsupportedIterableToArray(arr) || _nonIterableSpread(); }
+function _nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
+function _iterableToArray(iter) { if (typeof Symbol !== "undefined" && iter[Symbol.iterator] != null || iter["@@iterator"] != null) return Array.from(iter); }
+function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) return _arrayLikeToArray(arr); }
 function _get() { if (typeof Reflect !== "undefined" && Reflect.get) { _get = Reflect.get; } else { _get = function _get(target, property, receiver) { var base = _superPropBase(target, property); if (!base) return; var desc = Object.getOwnPropertyDescriptor(base, property); if (desc.get) { return desc.get.call(arguments.length < 3 ? target : receiver); } return desc.value; }; } return _get.apply(this, arguments); }
 function _superPropBase(object, property) { while (!Object.prototype.hasOwnProperty.call(object, property)) { object = _getPrototypeOf(object); if (object === null) break; } return object; }
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); Object.defineProperty(subClass, "prototype", { writable: false }); if (superClass) _setPrototypeOf(subClass, superClass); }
@@ -394,6 +398,8 @@ function makeEmptyRow() {
   return emptyRow;
 }
 var EMPTY_ROW = makeEmptyRow();
+
+// TODO: make this bag generator an injected dependency
 var RandomBagStacker = /*#__PURE__*/function (_Stacker) {
   _inherits(RandomBagStacker, _Stacker);
   var _super = _createSuper(RandomBagStacker);
@@ -451,14 +457,21 @@ var VSStacker = /*#__PURE__*/function (_RandomBagStacker) {
     _this3 = _super2.call(this);
     Object.assign(_assertThisInitialized(_this3), {
       garbage: [],
-      combos: 0
+      combos: 0,
+      garbageTick: false,
+      _spin: ""
     });
     return _this3;
   }
   _createClass(VSStacker, [{
+    key: "setSpin",
+    value: function setSpin(spin) {
+      this._spin = spin;
+    }
+  }, {
     key: "_addGarbage",
-    value: function _addGarbage(height) {
-      var col = Math.floor(Math.random() * ruleset.cols);
+    value: function _addGarbage(height, col) {
+      if (col >= ruleset.cols || col < 0) return;
       var line = '';
       for (var i = 0; i < ruleset.cols; i++) {
         line += i === col ? '_' : 'X';
@@ -472,9 +485,15 @@ var VSStacker = /*#__PURE__*/function (_RandomBagStacker) {
     key: "apply",
     value: function apply(op) {
       _get(_getPrototypeOf(VSStacker.prototype), "apply", this).call(this, op);
-      if (op === 'hd' && !this.comboing) {
+      if (op === 'hd') {
+        this.garbageTick = false;
+        if (this.comboing) {
+          return;
+        }
         while (this.garbage.length > 0) {
-          this._addGarbage(this.garbage.shift());
+          this.garbageTick = true;
+          var g = this.garbage.shift();
+          this._addGarbage(g.height, g.col);
         }
       }
     }
@@ -568,8 +587,7 @@ var TBPStacker = /*#__PURE__*/function (_VSStacker) {
     _this5 = _super4.call(this);
     Object.assign(_assertThisInitialized(_this5), {
       _targetPeice: null,
-      b2b: 0,
-      _spin: ""
+      b2b: 0
     });
     return _this5;
   }
@@ -589,7 +607,7 @@ var TBPStacker = /*#__PURE__*/function (_VSStacker) {
         ghostY: null
       };
       this._targetPeice = curPiece;
-      this._spin = spin;
+      this.setSpin(spin);
     }
   }, {
     key: "convertBoard",
@@ -628,7 +646,7 @@ var TBPStacker = /*#__PURE__*/function (_VSStacker) {
     }
   }]);
   return TBPStacker;
-}(VSStacker);
+}(VSStacker); // Debug perpose
 var InstantMoveStacker = /*#__PURE__*/function (_TBPStacker) {
   _inherits(InstantMoveStacker, _TBPStacker);
   var _super5 = _createSuper(InstantMoveStacker);
@@ -673,8 +691,8 @@ var InstantMoveStacker = /*#__PURE__*/function (_TBPStacker) {
   }]);
   return InstantMoveStacker;
 }(TBPStacker);
-var PathFindingStacker = /*#__PURE__*/function (_VSStacker2) {
-  _inherits(PathFindingStacker, _VSStacker2);
+var PathFindingStacker = /*#__PURE__*/function (_TBPStacker2) {
+  _inherits(PathFindingStacker, _TBPStacker2);
   var _super6 = _createSuper(PathFindingStacker);
   function PathFindingStacker() {
     _classCallCheck(this, PathFindingStacker);
@@ -801,13 +819,56 @@ var PathFindingStacker = /*#__PURE__*/function (_VSStacker2) {
     }
   }]);
   return PathFindingStacker;
-}(VSStacker);
+}(TBPStacker); // attack per peice
+var APPStacker = /*#__PURE__*/function (_InstantMoveStacker) {
+  _inherits(APPStacker, _InstantMoveStacker);
+  var _super7 = _createSuper(APPStacker);
+  function APPStacker() {
+    var _this6;
+    _classCallCheck(this, APPStacker);
+    _this6 = _super7.call(this);
+    Object.assign(_assertThisInitialized(_this6), {
+      _garbageListIdx: 0,
+      _garbageList: [0]
+    });
+    return _this6;
+  }
+  // deep copy
+  _createClass(APPStacker, [{
+    key: "setGarbageList",
+    value: function setGarbageList(gList) {
+      if (gList.length < 1) return;
+      this._garbageList = _toConsumableArray(gList);
+    }
+  }, {
+    key: "tick",
+    value: function tick() {
+      var g = this._garbageList[this._garbageListIdx];
+      if (g > 0) {
+        this.garbage.push({
+          height: g,
+          col: Math.floor(Math.random() * ruleset.cols)
+        });
+      }
+      this._garbageListIdx = (this._garbageListIdx + 1) % this._garbageList.length;
+    }
+  }, {
+    key: "apply",
+    value: function apply(op) {
+      _get(_getPrototypeOf(APPStacker.prototype), "apply", this).call(this, op);
+      if (op == "hd") {
+        this.tick();
+      }
+    }
+  }]);
+  return APPStacker;
+}(InstantMoveStacker);
 module.exports = {
   Stacker: Stacker,
   RandomBagStacker: RandomBagStacker,
   VSStacker: VSStacker,
   InstantMoveStacker: InstantMoveStacker,
-  PathFindingStacker: PathFindingStacker,
+  APPStacker: APPStacker,
   CheeseRaceStacker: CheeseRaceStacker,
   minos: minos
 };
@@ -934,7 +995,7 @@ var View = /*#__PURE__*/function () {
       var ctx = this.garbage.ctx;
       var garbage = this.stacker.garbage;
       var garbageNum = garbage.reduce(function (accumulator, currentValue) {
-        return accumulator + currentValue;
+        return accumulator + currentValue.height;
       }, 0);
       for (var i = 0; i < garbageNum; i++) {
         var y = (rules.rows - i - 1) * CELL;
@@ -1103,11 +1164,12 @@ module.exports = {
 "use strict";
 
 var _require = require('./stacker'),
-  InstantMoveStacker = _require.InstantMoveStacker;
+  APPStacker = _require.APPStacker;
 var _require2 = require('./view'),
   View = _require2.View;
-var stacker = new InstantMoveStacker();
+var stacker = new APPStacker();
 stacker.spawn();
+stacker.setGarbageList([1, 0, 0, 0, 1, 0]);
 var hold = null;
 var drawing = {
   container: document.body,
@@ -1134,7 +1196,7 @@ function getEmptyBoard() {
 }
 var bot = new Worker("./build.emscripten/misaImport.js");
 bot.onmessage = function (m) {
-  console.log(m.data);
+  // console.log(m.data);
   switch (m.data.type) {
     case "info":
       bot.postMessage({
@@ -1150,7 +1212,7 @@ bot.onmessage = function (m) {
     // do pathfinding and push to inputs then animate will process steps inside
     case "suggestion":
       var move = m.data.moves[0];
-      // console.log(move);
+      console.log(move);
       hold = stacker.hold;
       var steps = stacker.pathFinding(move.location, move.spin);
       bot.postMessage({
@@ -1176,26 +1238,38 @@ function animate() {
   }
   if (inputs.length === 0) {
     inputs = null;
-    // if (hold == '' && hold != stacker.hold) {
-    //   console.log("add peice "+ stacker.queue.slice(-2) );
-    //   bot.postMessage({"type":"new_piece", "piece":stacker.queue.slice(-2,-1)});
-    // }
-    // bot.postMessage({"type":"new_piece", "piece":stacker.queue.slice(-1)});
-    // console.log("add peice "+ stacker.queue.slice(-1));
 
-    gameMsg["board"] = getEmptyBoard();
-    var curBoard = stacker.convertBoard(gameMsg["board"]);
-    console.log("curBoard");
-    console.log(curBoard);
-    gameMsg["back_to_back"] = stacker.b2b > 0;
-    gameMsg["queue"] = (stacker.piece.type + stacker.queue).split("");
-    gameMsg["combo"] = stacker.combos;
-    gameMsg["hold"] = stacker.hold == '' ? null : stacker.hold;
-    console.log("update board");
-    console.log(gameMsg);
-    // gameMsg["back_to_back_num"] = stacker.b2b;
-    bot.postMessage(gameMsg);
-    // bot.postMessage({"type":"stop"});
+    // normal update
+    if (!stacker.garbageTick) {
+      if (hold == '' && hold != stacker.hold) {
+        console.log("add peice " + stacker.queue.slice(-2));
+        bot.postMessage({
+          "type": "new_piece",
+          "piece": stacker.queue.slice(-2, -1)
+        });
+      }
+      bot.postMessage({
+        "type": "new_piece",
+        "piece": stacker.queue.slice(-1)
+      });
+      console.log("add peice " + stacker.queue.slice(-1));
+    }
+    // update the whole board
+    else {
+      gameMsg["board"] = getEmptyBoard();
+      var curBoard = stacker.convertBoard(gameMsg["board"]);
+      console.log("curBoard");
+      console.log(curBoard);
+      gameMsg["back_to_back"] = stacker.b2b > 0;
+      gameMsg["queue"] = (stacker.piece.type + stacker.queue).split("");
+      gameMsg["combo"] = stacker.combos;
+      gameMsg["hold"] = stacker.hold == '' ? null : stacker.hold;
+      console.log("update board");
+      console.log(gameMsg);
+      // gameMsg["back_to_back_num"] = stacker.b2b;
+      bot.postMessage(gameMsg);
+      // // bot.postMessage({"type":"stop"});
+    }
     // send tbp request to bot
     // count++;
     // if (count < 6)

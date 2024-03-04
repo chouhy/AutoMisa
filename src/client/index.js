@@ -1,8 +1,9 @@
-const { InstantMoveStacker } = require('./stacker');
+const { APPStacker } = require('./stacker');
 const { View } = require('./view');
 
-let stacker = new InstantMoveStacker;
+let stacker = new APPStacker;
 stacker.spawn();
+stacker.setGarbageList([1, 0, 0, 0, 1, 0]);
 let hold = null;
 let drawing = {
     container: document.body,
@@ -65,32 +66,30 @@ function animate() {
         inputs = null;
 
         // normal update
-
-        // if (hold == '' && hold != stacker.hold) {
-        //   console.log("add peice "+ stacker.queue.slice(-2) );
-        //   bot.postMessage({"type":"new_piece", "piece":stacker.queue.slice(-2,-1)});
-        // }
-        // bot.postMessage({"type":"new_piece", "piece":stacker.queue.slice(-1)});
-        // console.log("add peice "+ stacker.queue.slice(-1));
-
+        if (!stacker.garbageTick) {
+            if (hold == '' && hold != stacker.hold) {
+              console.log("add peice "+ stacker.queue.slice(-2) );
+              bot.postMessage({"type":"new_piece", "piece":stacker.queue.slice(-2,-1)});
+            }
+            bot.postMessage({"type":"new_piece", "piece":stacker.queue.slice(-1)});
+            console.log("add peice "+ stacker.queue.slice(-1));
+        }
         // update the whole board
-
-        // gameMsg["board"] = getEmptyBoard();
-        // let curBoard = stacker.convertBoard(gameMsg["board"]);
-        // console.log("curBoard");
-        // console.log(curBoard);
-        // gameMsg["back_to_back"] = stacker.b2b > 0;
-        // gameMsg["queue"] = (stacker.piece.type+stacker.queue).split("");
-        // gameMsg["combo"] = stacker.combos;
-        // gameMsg["hold"] = stacker.hold == '' ? null : stacker.hold;
-        // console.log("update board");
-        // console.log(gameMsg);
-        // // gameMsg["back_to_back_num"] = stacker.b2b;
-        // bot.postMessage(gameMsg);
-        // // bot.postMessage({"type":"stop"});
-
-
-
+        else {
+            gameMsg["board"] = getEmptyBoard();
+            let curBoard = stacker.convertBoard(gameMsg["board"]);
+            console.log("curBoard");
+            console.log(curBoard);
+            gameMsg["back_to_back"] = stacker.b2b > 0;
+            gameMsg["queue"] = (stacker.piece.type+stacker.queue).split("");
+            gameMsg["combo"] = stacker.combos;
+            gameMsg["hold"] = stacker.hold == '' ? null : stacker.hold;
+            console.log("update board");
+            console.log(gameMsg);
+            // gameMsg["back_to_back_num"] = stacker.b2b;
+            bot.postMessage(gameMsg);
+            // // bot.postMessage({"type":"stop"});
+        }
         // send tbp request to bot
         // count++;
         // if (count < 6)

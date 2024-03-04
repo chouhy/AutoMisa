@@ -220,6 +220,7 @@ function makeEmptyRow() {
 
 const EMPTY_ROW = makeEmptyRow();
 
+// TODO: make this bag generator an injected dependency
 class RandomBagStacker extends Stacker {
     constructor() {
         super();
@@ -266,10 +267,17 @@ class VSStacker extends RandomBagStacker {
         Object.assign(this, { 
             garbage: [],
             combos: 0,
+            garbageTick: false,
+            _spin: "",
         });
     }
-    _addGarbage(height) {
-        let col = Math.floor(Math.random() * ruleset.cols);
+
+    setSpin(spin) {
+        this._spin = spin;
+    }
+
+    _addGarbage(height, col) {
+        if (col >= ruleset.cols || col < 0) return;
 
         let line = '';
         for (let i = 0; i < ruleset.cols; i++) {
@@ -282,9 +290,17 @@ class VSStacker extends RandomBagStacker {
     }
     apply(op) {
         super.apply(op);
-        if (op === 'hd' && !this.comboing) {
+        if (op === 'hd') {
+            this.garbageTick = false;
+            if (this.comboing) {
+
+
+                return;
+            }
             while (this.garbage.length > 0) {
-                this._addGarbage(this.garbage.shift());
+                this.garbageTick = true;
+                let g = this.garbage.shift();
+                this._addGarbage(g.height, g.col);
             }
         }
     }
@@ -356,7 +372,6 @@ class TBPStacker extends VSStacker {
         Object.assign(this, { 
             _targetPeice: null,
             b2b: 0,
-            _spin: "",
         });
     }
     pathFinding(location, spin) {
@@ -364,7 +379,7 @@ class TBPStacker extends VSStacker {
         orientation = TBPorientationMapping[orientation];
         let curPiece = { type, x: initX, y: initY, rotation: orientation, ghostY: null };
         this._targetPeice = curPiece;
-        this._spin = spin;
+        this.setSpin(spin);
     }
 
     convertBoard(board) {
@@ -402,7 +417,7 @@ class TBPStacker extends VSStacker {
     }
 
 }
-
+// Debug perpose
 class InstantMoveStacker extends TBPStacker {
     pathFinding(location, spin) {
         super.pathFinding(location, spin);
@@ -435,7 +450,7 @@ class InstantMoveStacker extends TBPStacker {
         }
     }
 }
-class PathFindingStacker extends VSStacker {
+class PathFindingStacker extends TBPStacker {
    
     _transformForPath(piece, tfs) {
         let { x, y, rotation } = piece;
@@ -522,13 +537,43 @@ class PathFindingStacker extends VSStacker {
         return steps;
     }
 }
+// attack per peice
+class APPStacker extends InstantMoveStacker {
+    constructor() {
+        super();
+        Object.assign(this, {
+            _garbageListIdx: 0,
+            _garbageList: [0],
+        });
+    }
+    // deep copy
+    setGarbageList(gList) {
+        if (gList.length < 1) return;
+        this._garbageList = [...gList];
+    }
+
+    tick() {
+        let g = this._garbageList[this._garbageListIdx];
+        if (g > 0) {
+            this.garbage.push({height: g, col: Math.floor(Math.random() * ruleset.cols)});
+        }
+        this._garbageListIdx = (this._garbageListIdx + 1) % this._garbageList.length;
+    }
+
+    apply(op) {
+        super.apply(op);
+        if (op == "hd") {
+            this.tick();
+        }
+    }
+}
 
 module.exports = {
     Stacker,
     RandomBagStacker,
     VSStacker,
     InstantMoveStacker,
-    PathFindingStacker,
+    APPStacker,
     CheeseRaceStacker,
     minos
 };
