@@ -1,4 +1,81 @@
 (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
+"use strict";
+
+function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); Object.defineProperty(subClass, "prototype", { writable: false }); if (superClass) _setPrototypeOf(subClass, superClass); }
+function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
+function _createSuper(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
+function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } else if (call !== void 0) { throw new TypeError("Derived constructors may only return object or undefined"); } return _assertThisInitialized(self); }
+function _assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
+function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
+function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); Object.defineProperty(Constructor, "prototype", { writable: false }); return Constructor; }
+// abstract class
+var Attack = /*#__PURE__*/function () {
+  function Attack() {
+    _classCallCheck(this, Attack);
+    Object.assign(this, {
+      comboList: [],
+      b2bList: {},
+      b2bPiece: {},
+      pc: 0,
+      spinAtk: [],
+      nospinAtk: []
+    });
+  }
+  _createClass(Attack, [{
+    key: "apply",
+    value: function apply(combos, b2b, clearline, spin, type) {
+      return 0;
+    }
+  }]);
+  return Attack;
+}(); // https://harddrop.com/wiki/Puyo_Puyo_Tetris#Tetris_vs_Tetris_(Versus)
+var PPTAttack = /*#__PURE__*/function (_Attack) {
+  _inherits(PPTAttack, _Attack);
+  var _super = _createSuper(PPTAttack);
+  function PPTAttack() {
+    var _this;
+    _classCallCheck(this, PPTAttack);
+    _this = _super.call(this);
+    _this.comboList = [0, 1, 1, 2, 2, 3, 3, 4, 4, 4, 5];
+    _this.b2bList = [1];
+    _this.pc = 10;
+    _this.b2bPiece = {
+      "I": true,
+      "T": true
+    };
+    _this.spinAtk = [2, 4, 6];
+    _this.nospinAtk = [0, 1, 2];
+    return _this;
+  }
+  _createClass(PPTAttack, [{
+    key: "apply",
+    value: function apply(combos, b2b, clearline, spin, type) {
+      var atk = 0;
+      if (clearline == 0) return atk;
+      if (combos > 0) {
+        atk += this.comboList[Math.min(this.comboList.length - 1, combos - 1)];
+      }
+      if (spin == "full" && this.b2bPiece[type] && type != "I") {
+        atk += this.spinAtk[clearline - 1];
+      } else {
+        atk += this.nospinAtk[clearline - 1];
+      }
+      atk += b2b > 0 ? this.b2bList[0] : 0;
+      return atk;
+    }
+  }]);
+  return PPTAttack;
+}(Attack);
+module.exports = {
+  Attack: Attack,
+  PPTAttack: PPTAttack
+};
+
+},{}],2:[function(require,module,exports){
 module.exports={
     "previews": 5,
     "cheese": {
@@ -66,7 +143,7 @@ module.exports={
     }
 }
 
-},{}],2:[function(require,module,exports){
+},{}],3:[function(require,module,exports){
 "use strict";
 
 function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
@@ -440,14 +517,6 @@ var TBPorientationMapping = {
   "south": "reverse",
   "west": "left"
 };
-var reverseOp = {
-  "up": "sd",
-  "l": "right",
-  "r": "left",
-  "cw": "ccw",
-  "ccw": "cw"
-};
-var ops = ["up", "l", "r", "cw", "ccw"];
 var VSStacker = /*#__PURE__*/function (_RandomBagStacker) {
   _inherits(VSStacker, _RandomBagStacker);
   var _super2 = _createSuper(VSStacker);
@@ -456,14 +525,29 @@ var VSStacker = /*#__PURE__*/function (_RandomBagStacker) {
     _classCallCheck(this, VSStacker);
     _this3 = _super2.call(this);
     Object.assign(_assertThisInitialized(_this3), {
+      // garbage = { height, column}
       garbage: [],
       combos: 0,
       garbageTick: false,
-      _spin: ""
+      _b2bPiece: {},
+      _spin: "",
+      b2b: -1,
+      _atkCal: null,
+      _prevType: ""
     });
     return _this3;
   }
   _createClass(VSStacker, [{
+    key: "setAtkCal",
+    value: function setAtkCal(atkCal) {
+      this._atkCal = atkCal;
+    }
+  }, {
+    key: "setb2bPiece",
+    value: function setb2bPiece(b2b) {
+      this.b2bPiece = b2b;
+    }
+  }, {
     key: "setSpin",
     value: function setSpin(spin) {
       this._spin = spin;
@@ -482,14 +566,54 @@ var VSStacker = /*#__PURE__*/function (_RandomBagStacker) {
       this._computeGhost();
     }
   }, {
+    key: "_cancel",
+    value: function _cancel(attack) {
+      console.log("atk = " + attack);
+      while (attack > 0 && this.garbage.length > 0) {
+        if (this.garbage[0].height > attack) {
+          this.garbage[0].height -= attack;
+          attack = 0;
+        } else {
+          attack -= this.garbage[0].height;
+          this.garbage.shift();
+        }
+      }
+    }
+  }, {
     key: "apply",
     value: function apply(op) {
+      if (op == 'hd') {
+        this._prevType = this.piece.type;
+      }
       _get(_getPrototypeOf(VSStacker.prototype), "apply", this).call(this, op);
       if (op === 'hd') {
-        this.garbageTick = false;
+        // same as combo 2 consecutive b2b is b2bx1
+        if (this.clear > 0) {
+          if (!this.b2bPiece[this._prevType]) {
+            this.b2b = -1;
+          } else {
+            if (this._prevType == "I" && this.clear < 4) {
+              this.b2b = -1;
+            } else if (this._prevType == "T" && this._spin == "none") {
+              this.b2b = -1;
+            } else {
+              this.b2b++;
+            }
+          }
+        }
         if (this.comboing) {
+          if (this._atkCal) {
+            console.log("peice:" + this._prevType);
+            console.log("combos:" + this.combos);
+            console.log("spin:" + this._spin);
+            console.log("b2b:" + this.b2b);
+            console.log("combos:" + this.combos);
+            console.log("clear:" + this.clear);
+            this._cancel(this._atkCal.apply(this.combos, this.b2b, this.clear, this._spin, this._prevType));
+          }
           return;
         }
+        this.garbageTick = false;
         while (this.garbage.length > 0) {
           this.garbageTick = true;
           var g = this.garbage.shift();
@@ -501,7 +625,9 @@ var VSStacker = /*#__PURE__*/function (_RandomBagStacker) {
     key: "_lock",
     value: function _lock() {
       _get(_getPrototypeOf(VSStacker.prototype), "_lock", this).call(this);
-      if (this.comboing) this.combos++;else this.combos = 0;
+      if (this.comboing) this.combos++;
+      // 2 consecutive clears = 1 combo
+      else this.combos = -1;
     }
   }]);
   return VSStacker;
@@ -574,10 +700,6 @@ var CheeseRaceStacker = /*#__PURE__*/function (_RandomBagStacker2) {
   }]);
   return CheeseRaceStacker;
 }(RandomBagStacker);
-var TBPB2B = {
-  "I": true,
-  "T": true
-};
 var TBPStacker = /*#__PURE__*/function (_VSStacker) {
   _inherits(TBPStacker, _VSStacker);
   var _super4 = _createSuper(TBPStacker);
@@ -586,8 +708,7 @@ var TBPStacker = /*#__PURE__*/function (_VSStacker) {
     _classCallCheck(this, TBPStacker);
     _this5 = _super4.call(this);
     Object.assign(_assertThisInitialized(_this5), {
-      _targetPeice: null,
-      b2b: 0
+      _targetPeice: null
     });
     return _this5;
   }
@@ -625,24 +746,6 @@ var TBPStacker = /*#__PURE__*/function (_VSStacker) {
         });
       });
       return curBoard;
-    }
-  }, {
-    key: "sift",
-    value: function sift() {
-      _get(_getPrototypeOf(TBPStacker.prototype), "sift", this).call(this);
-      if (this.clearline > 0) {
-        if (!TBPB2B[this.piece.type]) {
-          this.b2b = 0;
-        } else {
-          if (this.piece.type == "I" && this.clearline < 4) {
-            this.b2b = 0;
-          } else if (this.piece.type == "T" && this._spin == "none") {
-            this.b2b = 0;
-          } else {
-            this.b2b++;
-          }
-        }
-      }
     }
   }]);
   return TBPStacker;
@@ -691,6 +794,14 @@ var InstantMoveStacker = /*#__PURE__*/function (_TBPStacker) {
   }]);
   return InstantMoveStacker;
 }(TBPStacker);
+var reverseOp = {
+  "up": "sd",
+  "l": "right",
+  "r": "left",
+  "cw": "ccw",
+  "ccw": "cw"
+};
+var ops = ["up", "l", "r", "cw", "ccw"];
 var PathFindingStacker = /*#__PURE__*/function (_TBPStacker2) {
   _inherits(PathFindingStacker, _TBPStacker2);
   var _super6 = _createSuper(PathFindingStacker);
@@ -873,7 +984,7 @@ module.exports = {
   minos: minos
 };
 
-},{"./ruleset":1}],3:[function(require,module,exports){
+},{"./ruleset":2}],4:[function(require,module,exports){
 module.exports={
     "bg": "#000000",
     "grid": ["#101010", "#202020", "#404040"],
@@ -890,7 +1001,7 @@ module.exports={
     }
 }
 
-},{}],4:[function(require,module,exports){
+},{}],5:[function(require,module,exports){
 "use strict";
 
 function _createForOfIteratorHelper(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (!it) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e2) { throw _e2; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = it.call(o); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e3) { didErr = true; err = _e3; }, f: function f() { try { if (!normalCompletion && it["return"] != null) it["return"](); } finally { if (didErr) throw err; } } }; }
@@ -1160,16 +1271,21 @@ module.exports = {
   View: View
 };
 
-},{"./ruleset":1,"./stacker":2,"./theme":3}],5:[function(require,module,exports){
+},{"./ruleset":2,"./stacker":3,"./theme":4}],6:[function(require,module,exports){
 "use strict";
 
 var _require = require('./stacker'),
   APPStacker = _require.APPStacker;
 var _require2 = require('./view'),
   View = _require2.View;
+var _require3 = require('./attack.js'),
+  PPTAttack = _require3.PPTAttack;
 var stacker = new APPStacker();
+var atk = new PPTAttack();
 stacker.spawn();
 stacker.setGarbageList([1, 0, 0, 0, 1, 0]);
+stacker.setAtkCal(atk);
+stacker.setb2bPiece(atk.b2bPiece);
 var hold = null;
 var drawing = {
   container: document.body,
@@ -1226,11 +1342,12 @@ bot.onmessage = function (m) {
       break;
   }
 };
-
-// document.getElementById("next").addEventListener("click", function() {
-//   console.log(this.id);
-//   bot.postMessage({"type":"suggest"});
-// });
+document.getElementById("next").addEventListener("click", function () {
+  console.log(this.id);
+  bot.postMessage({
+    "type": "suggest"
+  });
+});
 var inputs = null;
 function animate() {
   if (inputs === null) {
@@ -1242,7 +1359,7 @@ function animate() {
     // normal update
     if (!stacker.garbageTick) {
       if (hold == '' && hold != stacker.hold) {
-        console.log("add peice " + stacker.queue.slice(-2));
+        //   console.log("add peice "+ stacker.queue.slice(-2) );
         bot.postMessage({
           "type": "new_piece",
           "piece": stacker.queue.slice(-2, -1)
@@ -1252,20 +1369,20 @@ function animate() {
         "type": "new_piece",
         "piece": stacker.queue.slice(-1)
       });
-      console.log("add peice " + stacker.queue.slice(-1));
+      // console.log("add peice "+ stacker.queue.slice(-1));
     }
     // update the whole board
     else {
       gameMsg["board"] = getEmptyBoard();
       var curBoard = stacker.convertBoard(gameMsg["board"]);
-      console.log("curBoard");
-      console.log(curBoard);
-      gameMsg["back_to_back"] = stacker.b2b > 0;
+      // console.log("curBoard");
+      // console.log(curBoard);
+      gameMsg["back_to_back"] = stacker.b2b >= 0;
       gameMsg["queue"] = (stacker.piece.type + stacker.queue).split("");
       gameMsg["combo"] = stacker.combos;
       gameMsg["hold"] = stacker.hold == '' ? null : stacker.hold;
-      console.log("update board");
-      console.log(gameMsg);
+      // console.log("update board");
+      // console.log(gameMsg);
       // gameMsg["back_to_back_num"] = stacker.b2b;
       bot.postMessage(gameMsg);
       // // bot.postMessage({"type":"stop"});
@@ -1273,9 +1390,7 @@ function animate() {
     // send tbp request to bot
     // count++;
     // if (count < 6)
-    bot.postMessage({
-      "type": "suggest"
-    });
+    // bot.postMessage({"type":"suggest"});
     return;
   }
   // inputs.shift();
@@ -1284,4 +1399,4 @@ function animate() {
 }
 setInterval(animate, 100);
 
-},{"./stacker":2,"./view":4}]},{},[5]);
+},{"./attack.js":1,"./stacker":3,"./view":5}]},{},[6]);

@@ -1,8 +1,9 @@
 const { APPStacker } = require('./stacker');
 const { View } = require('./view');
-const { PPTattack } = require('./attack.js');
+const { PPTAttack } = require('./attack.js');
+
 let stacker = new APPStacker;
-let atk = new PPTattack;
+let atk = new PPTAttack;
 stacker.spawn();
 stacker.setGarbageList([1, 0, 0, 0, 1, 0]);
 stacker.setAtkCal(atk);
@@ -57,10 +58,10 @@ bot.onmessage = (m) => {
     }
 }
 
-// document.getElementById("next").addEventListener("click", function() {
-//   console.log(this.id);
-//   bot.postMessage({"type":"suggest"});
-// });
+document.getElementById("next").addEventListener("click", function() {
+  console.log(this.id);
+  bot.postMessage({"type":"suggest"});
+});
 let inputs = null;
 function animate() {
     if (inputs === null) {
@@ -72,24 +73,24 @@ function animate() {
         // normal update
         if (!stacker.garbageTick) {
             if (hold == '' && hold != stacker.hold) {
-              console.log("add peice "+ stacker.queue.slice(-2) );
+            //   console.log("add peice "+ stacker.queue.slice(-2) );
               bot.postMessage({"type":"new_piece", "piece":stacker.queue.slice(-2,-1)});
             }
             bot.postMessage({"type":"new_piece", "piece":stacker.queue.slice(-1)});
-            console.log("add peice "+ stacker.queue.slice(-1));
+            // console.log("add peice "+ stacker.queue.slice(-1));
         }
         // update the whole board
         else {
             gameMsg["board"] = getEmptyBoard();
             let curBoard = stacker.convertBoard(gameMsg["board"]);
-            console.log("curBoard");
-            console.log(curBoard);
+            // console.log("curBoard");
+            // console.log(curBoard);
             gameMsg["back_to_back"] = stacker.b2b >= 0;
             gameMsg["queue"] = (stacker.piece.type+stacker.queue).split("");
             gameMsg["combo"] = stacker.combos;
             gameMsg["hold"] = stacker.hold == '' ? null : stacker.hold;
-            console.log("update board");
-            console.log(gameMsg);
+            // console.log("update board");
+            // console.log(gameMsg);
             // gameMsg["back_to_back_num"] = stacker.b2b;
             bot.postMessage(gameMsg);
             // // bot.postMessage({"type":"stop"});
@@ -97,7 +98,7 @@ function animate() {
         // send tbp request to bot
         // count++;
         // if (count < 6)
-        bot.postMessage({"type":"suggest"});
+        // bot.postMessage({"type":"suggest"});
         return;
     }
     // inputs.shift();

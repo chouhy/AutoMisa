@@ -262,8 +262,9 @@ class VSStacker extends RandomBagStacker {
             garbageTick: false,
             _b2bPiece: {},
             _spin: "",
-            b2b: 0,
+            b2b: -1,
             _atkCal: null,
+            _prevType: "",
         });
     }
 
@@ -292,6 +293,7 @@ class VSStacker extends RandomBagStacker {
         this._computeGhost();
     }
     _cancel(attack) {
+        console.log("atk = "+attack);
         while (attack > 0 && this.garbage.length > 0) {
             if (this.garbage[0].height > attack) {
                 this.garbage[0].height -= attack;
@@ -304,38 +306,46 @@ class VSStacker extends RandomBagStacker {
         }
     }
     apply(op) {
+        if (op == 'hd') {
+            this._prevType = this.piece.type;
+        }
         super.apply(op);
         if (op === 'hd') {
-            this.garbageTick = false;
+            // same as combo 2 consecutive b2b is b2bx1
+            if (this.clear > 0) {
+                if (!this.b2bPiece[this._prevType]) {
+                    this.b2b = -1;
+                }
+                else {
+                    if (this._prevType == "I" && this.clear < 4) {
+                        this.b2b = -1;
+                    }
+                    else if (this._prevType == "T" && this._spin == "none") {
+                        this.b2b = -1;
+                    }
+                    else {
+                        this.b2b++;
+                    }
+                }
+            }
+            
             if (this.comboing) {
-                if (this._atkCal)
-                    this._cancel(this._atkCal.apply(this.combos, this.b2b, this.clear, this._spin, this.piece.type));
+                if (this._atkCal) {
+                    console.log("peice:"+this._prevType);
+                    console.log("combos:"+this.combos);
+                    console.log("spin:"+this._spin);                    
+                    console.log("b2b:"+this.b2b);
+                    console.log("combos:"+this.combos);
+                    console.log("clear:"+this.clear);
+                    this._cancel(this._atkCal.apply(this.combos, this.b2b, this.clear, this._spin, this._prevType));
+                }
                 return;
             }
+            this.garbageTick = false;
             while (this.garbage.length > 0) {
                 this.garbageTick = true;
                 let g = this.garbage.shift();
                 this._addGarbage(g.height, g.col);
-            }
-        }
-    }
-    sift() {
-        super.sift();
-        // same as combo 2 consecutive b2b is b2bx1
-        if (this.clearline > 0) {
-            if (!this.b2bPiece[this.piece.type]) {
-                this.b2b = -1;
-            }
-            else {
-                if (this.piece.type == "I" && this.clearline < 4) {
-                    this.b2b = -1;
-                }
-                else if (this.piece.type == "T" && this._spin == "none") {
-                    this.b2b = -1;
-                }
-                else {
-                    this.b2b++;
-                }
             }
         }
     }
