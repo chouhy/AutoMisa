@@ -251,25 +251,28 @@ const TBPorientationMapping = {
     "west": "left"
 }
 
-const reverseOp = {
-    "up": "sd",
-    "l": "right",
-    "r": "left",
-    "cw": "ccw",
-    "ccw": "cw"
-}
-
-const ops = ["up","l", "r", "cw", "ccw"];
 
 class VSStacker extends RandomBagStacker {
     constructor() {
         super();
         Object.assign(this, { 
+            // garbage = { height, column}
             garbage: [],
             combos: 0,
             garbageTick: false,
+            _b2bPiece: {},
             _spin: "",
+            b2b: 0,
+            _atkCal: null,
         });
+    }
+
+    setAtkCal(atkCal) {
+        this._atkCal = atkCal;
+    }
+
+    setb2bPiece(b2b) {
+        this.b2bPiece = b2b;
     }
 
     setSpin(spin) {
@@ -288,13 +291,25 @@ class VSStacker extends RandomBagStacker {
         }
         this._computeGhost();
     }
+    _cancel(attack) {
+        while (attack > 0 && this.garbage.length > 0) {
+            if (this.garbage[0].height > attack) {
+                this.garbage[0].height -= attack;
+                attack = 0;
+            }
+            else {
+                attack -= this.garbage[0].height;
+                this.garbage.shift();
+            }
+        }
+    }
     apply(op) {
         super.apply(op);
         if (op === 'hd') {
             this.garbageTick = false;
             if (this.comboing) {
-
-
+                if (this._atkCal)
+                    this._cancel(this._atkCal.apply(this.combos, this.b2b, this.clear, this._spin, this.piece.type));
                 return;
             }
             while (this.garbage.length > 0) {
@@ -304,10 +319,31 @@ class VSStacker extends RandomBagStacker {
             }
         }
     }
+    sift() {
+        super.sift();
+        // same as combo 2 consecutive b2b is b2bx1
+        if (this.clearline > 0) {
+            if (!this.b2bPiece[this.piece.type]) {
+                this.b2b = -1;
+            }
+            else {
+                if (this.piece.type == "I" && this.clearline < 4) {
+                    this.b2b = -1;
+                }
+                else if (this.piece.type == "T" && this._spin == "none") {
+                    this.b2b = -1;
+                }
+                else {
+                    this.b2b++;
+                }
+            }
+        }
+    }
     _lock() {
         super._lock();
         if (this.comboing) this.combos++;
-        else this.combos = 0;
+        // 2 consecutive clears = 1 combo
+        else this.combos = -1;
     }
 }
 
@@ -361,17 +397,11 @@ class CheeseRaceStacker extends RandomBagStacker {
     }
 }
 
-const TBPB2B = {
-    "I" : true,
-    "T" : true
-}
-
 class TBPStacker extends VSStacker {
     constructor() {
         super();
         Object.assign(this, { 
             _targetPeice: null,
-            b2b: 0,
         });
     }
     pathFinding(location, spin) {
@@ -395,27 +425,6 @@ class TBPStacker extends VSStacker {
         });
         return curBoard;
     }
-    sift() {
-        super.sift();
-
-        if (this.clearline > 0) {
-            if (!TBPB2B[this.piece.type]) {
-                this.b2b = 0;
-            }
-            else {
-                if (this.piece.type == "I" && this.clearline < 4) {
-                    this.b2b = 0;
-                }
-                else if (this.piece.type == "T" && this._spin == "none") {
-                    this.b2b = 0;
-                }
-                else {
-                    this.b2b++;
-                }
-            }
-        }
-    }
-
 }
 // Debug perpose
 class InstantMoveStacker extends TBPStacker {
@@ -450,6 +459,15 @@ class InstantMoveStacker extends TBPStacker {
         }
     }
 }
+const reverseOp = {
+    "up": "sd",
+    "l": "right",
+    "r": "left",
+    "cw": "ccw",
+    "ccw": "cw"
+}
+const ops = ["up","l", "r", "cw", "ccw"];
+
 class PathFindingStacker extends TBPStacker {
    
     _transformForPath(piece, tfs) {

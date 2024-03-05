@@ -1,9 +1,13 @@
 const { APPStacker } = require('./stacker');
 const { View } = require('./view');
-
+const { PPTattack } = require('./attack.js');
 let stacker = new APPStacker;
+let atk = new PPTattack;
 stacker.spawn();
 stacker.setGarbageList([1, 0, 0, 0, 1, 0]);
+stacker.setAtkCal(atk);
+stacker.setb2bPiece(atk.b2bPiece);
+
 let hold = null;
 let drawing = {
     container: document.body,
@@ -80,7 +84,7 @@ function animate() {
             let curBoard = stacker.convertBoard(gameMsg["board"]);
             console.log("curBoard");
             console.log(curBoard);
-            gameMsg["back_to_back"] = stacker.b2b > 0;
+            gameMsg["back_to_back"] = stacker.b2b >= 0;
             gameMsg["queue"] = (stacker.piece.type+stacker.queue).split("");
             gameMsg["combo"] = stacker.combos;
             gameMsg["hold"] = stacker.hold == '' ? null : stacker.hold;
