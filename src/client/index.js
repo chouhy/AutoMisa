@@ -5,6 +5,7 @@ const { PPTAttack } = require('./attack.js');
 let stacker = new PathFindingStacker;
 // let stacker = new APPStacker;
 let atk = new PPTAttack;
+// stacker.specificBoardState();
 stacker.spawn();
 // stacker.setGarbageList([1, 0, 0, 0, 1, 0]);
 // stacker.setAtkCal(atk);
@@ -23,14 +24,16 @@ let view = new View(stacker, drawing);
 view.resize();
 view.draw();
 
-let gameMsg = {"type":"start","hold":null,"combo":0,"back_to_back":false,"board":getEmptyBoard()};
-gameMsg["queue"] = (stacker.piece.type+stacker.queue).split("");
-//"queue":["I","T","I","L","O","Z"]
-console.log(gameMsg);
-
 function getEmptyBoard() {
     return [[null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null]];
 }
+
+let gameMsg = {"type":"start","hold":null,"combo":0,"back_to_back":false,"board":getEmptyBoard()};
+gameMsg["queue"] = (stacker.piece.type+stacker.queue).split("");
+//"queue":["I","T","I","L","O","Z"]
+// stacker.convertBoard(gameMsg["board"]);
+console.log(gameMsg);
+
 
 let bot = new Worker("./build.emscripten/misaImport.js");
 
@@ -99,7 +102,7 @@ function animate() {
         // send tbp request to bot
         // count++;
         // if (count < 6)
-        // bot.postMessage({"type":"suggest"});
+        bot.postMessage({"type":"suggest"});
         return;
     }
     // inputs.shift();

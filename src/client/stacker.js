@@ -11,7 +11,15 @@ class Stacker {
             clear: 0,
         });
     }
-
+    specificBoardState() {
+        this.matrix = [
+           "XXXXXX___X",
+           "XXXXX____X",
+           "XXXXXX___X",
+           "XXXXXX___X",
+           "XXXXXX__XX"
+        ];
+    }
     copy() {
         let { matrix, hold, queue } = this;
         let piece = this.piece ? Object.assign({}, this.piece) : null;
@@ -273,7 +281,7 @@ class VSStacker extends RandomBagStacker {
     }
 
     setb2bPiece(b2b) {
-        this.b2bPiece = b2b;
+        this._b2bPiece = b2b;
     }
 
     setSpin(spin) {
@@ -313,7 +321,7 @@ class VSStacker extends RandomBagStacker {
         if (op === 'hd') {
             // same as combo 2 consecutive b2b is b2bx1
             if (this.clear > 0) {
-                if (!this.b2bPiece[this._prevType]) {
+                if (!this._b2bPiece[this._prevType]) {
                     this.b2b = -1;
                 }
                 else {
@@ -480,22 +488,44 @@ const ops = ["up","l", "r", "cw", "ccw"];
 
 class PathFindingStacker extends TBPStacker {
    
-    _transformForPath(piece, tfs, attemptIdx) {
+    _transformForPath(piece, tfs) {
+        let { x, y, rotation } = piece;
+        let attempt = 0;
+        for (let { dx, dy, r } of tfs) {
+            attempt++;
+            piece.x = x + dx;
+            piece.y = y + dy;
+            piece.rotation = r;
+            if (!this._intersects(piece)) {
+                return attempt;
+            }
+        }
+        // reset since all attempts failed
+        piece.x = x;
+        piece.y = y;
+        piece.rotation = rotation;
+        return null;
+    }
+    _transformSimple(piece, tfs, attemptIdx) {
         let { dx, dy, r } = tfs[attemptIdx];
         piece.x += dx;
         piece.y += dy;
         piece.rotation = r;
     }
-    _getTransformOptions(piece, tfs) {
+    _getTransformOptions(piece, rotate) {
         let { x, y, rotation } = piece;
         let attempt = 0;
         let options = [];
+        let tfs = kicks(piece, rotate);
         for (let { dx, dy, r } of tfs) {
             piece.x = x + dx;
             piece.y = y + dy;
             piece.rotation = r;
             if (!this._intersects(piece)) {
-                options.push(attempt);
+                this._transformForPath(piece, kicks(piece, rotate == "cw"?"ccw":"cw"));
+                if (piece.x == x && piece.y == y) {
+                    options.push(attempt);
+                }
             }
             attempt++;
         }
@@ -505,7 +535,7 @@ class PathFindingStacker extends TBPStacker {
         piece.rotation = rotation;
         return options;
     }
-    _float(curPiece) {
+    _isFloating(curPiece) {
         curPiece.y--;
         let result = !this._intersects(curPiece);
         curPiece.y++;
@@ -527,16 +557,68 @@ class PathFindingStacker extends TBPStacker {
     }
     // find path until reachable to sky
     _pathFinding(curPiece, test) {
-        while (!this.isSkyReachable(curPiece)) {
-            if (this._spin != "none") {
+        if (!this.isSkyReachable(curPiece)) {
+            // if (this._spin != "none") {
+            //     return false;
+            //     // have to try spinning for the first step
+            //     // ...
+            //     this.setSpin("none");
+            // }
+            // else {
+                for (let op of ops) {
+                    let lastOp;
+                    switch(op){
+                    case "up":
+                        curPiece.y++;
+                        if (!this._intersects(curPiece)) {
+                            test.push({op:op});
+                            if(this._pathFinding(curPiece, test)) return true;
+                            test.pop();
+                        }
+                        curPiece.y--;
+                        break;
+                    case "l":
+                    case "r":
+                        let dx = (op == "l") ? -1 : 1;
+                        lastOp = test.at(-1);
+                        // prevent infinite lrlrlr movement
+                        if (lastOp && (lastOp.op == "l" || lastOp.op == "r") && lastOp.op != op) continue;
+                        let oldX = curPiece.x;
+                        curPiece.x += dx;
+                        
+                        while (!this._intersects(curPiece)) {
+                            test.push({op:op});
+                            if (!this._isFloating(curPiece) && this._pathFinding(curPiece, test)) return true;
+                            curPiece.x += dx;
+                        }
+                        while (test.length > 0 && test.at(-1).op == op) test.pop();
+                        curPiece.x = oldX;
+                        break;
+                    case "cw":
+                    case "ccw":
+                        lastOp = test.at(-1);
+                        // attempts in options are tested, no intersections
+                        let options = this._getTransformOptions(curPiece, op);
+                        let { x, y, rotation } = curPiece;
+                        for (let i = options.length-1; i >= 0; i--) {
+                            // prevent infinite cw cww loop
+                            if (lastOp && (lastOp.op == "cw" || lastOp.op == "ccw") && lastOp.op != op && lastOp.idx == options[i])
+                                continue;
+                            this._transformSimple(curPiece, kicks(curPiece, op), options[i]);
+                            test.push({op:op, idx:options[i]});
+                            if (this._pathFinding(curPiece, test)) return true;
+                            // reset
+                            curPiece.x = x;
+                            curPiece.y = y;
+                            curPiece.rotation = rotation;
+                            test.pop();
+                        }
+                        break;
+                    default:
+                    }
+                }
                 return false;
-                // have to try spinning for the first step
-                // ...
-                this.setSpin("none");
-            }
-            else {
-                
-            }
+            // }
         }
         return true;
     }
@@ -551,6 +633,7 @@ class PathFindingStacker extends TBPStacker {
         let spawnPiece = { type, x, y, rotation, ghostY: null };
         let test = [];
         let steps = [];
+        curPiece._float = false;
         console.log(this._targetPeice);
         if (this._pathFinding(curPiece, test)) {
             if (this.piece.type != curPiece.type) {
@@ -584,7 +667,7 @@ class PathFindingStacker extends TBPStacker {
             steps.push("sd");
             // reverse test ops and fill inputs
             while (test.length > 0) {
-                let op = reverseOp[test.pop()];
+                let op = reverseOp[test.pop().op];
                 if (op == "sd" && steps.length > 0 && steps.slice(-1) == "sd") continue;
                 steps.push(op);
             }
