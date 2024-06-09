@@ -1,13 +1,14 @@
-const { APPStacker } = require('./stacker');
+const { APPStacker, PathFindingStacker } = require('./stacker');
 const { View } = require('./view');
 const { PPTAttack } = require('./attack.js');
 
-let stacker = new APPStacker;
+let stacker = new PathFindingStacker;
+// let stacker = new APPStacker;
 let atk = new PPTAttack;
 stacker.spawn();
-stacker.setGarbageList([1, 0, 0, 0, 1, 0]);
-stacker.setAtkCal(atk);
-stacker.setb2bPiece(atk.b2bPiece);
+// stacker.setGarbageList([1, 0, 0, 0, 1, 0]);
+// stacker.setAtkCal(atk);
+// stacker.setb2bPiece(atk.b2bPiece);
 
 let hold = null;
 let drawing = {

@@ -26,7 +26,7 @@ class PPTAttack extends Attack {
             "T":true,
         };
         this.spinAtk = [2,4,6];
-        this.nospinAtk = [0,1,2];
+        this.nospinAtk = [0,1,2,4];
     }
     apply(combos, b2b, clearline, spin, type) {
         let atk = 0;

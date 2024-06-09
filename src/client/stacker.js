@@ -480,78 +480,108 @@ const ops = ["up","l", "r", "cw", "ccw"];
 
 class PathFindingStacker extends TBPStacker {
    
-    _transformForPath(piece, tfs) {
+    _transformForPath(piece, tfs, attemptIdx) {
+        let { dx, dy, r } = tfs[attemptIdx];
+        piece.x += dx;
+        piece.y += dy;
+        piece.rotation = r;
+    }
+    _getTransformOptions(piece, tfs) {
         let { x, y, rotation } = piece;
         let attempt = 0;
+        let options = [];
         for (let { dx, dy, r } of tfs) {
-            attempt++;
             piece.x = x + dx;
             piece.y = y + dy;
             piece.rotation = r;
             if (!this._intersects(piece)) {
-                return attempt;
+                options.push(attempt);
             }
+            attempt++;
         }
-        // reset since all attempts failed
+        // reset 
         piece.x = x;
         piece.y = y;
         piece.rotation = rotation;
-        return null;
+        return options;
     }
-
-    _pathFinding(curPiece, spawnPiece, test) {
-        if (curPiece.x == spawnPiece.x && curPiece.y == spawnPiece.y && curPiece.rotation == spawnPiece.rotation) return true;
-        let h = { "l": -1, "r": 1 };
-        do {
-            let originPiece = Object.assign({}, curPiece);
-            for (const op of ops) {
-                if (test.length > 0 && 
-                    ((op == "l" && test.slice(-1) == "r") || op == "r" && test.slice(-1) == "l")) {
-                        continue;
-                    }
-                test.push(op);
-                
-                if (op == "up" && curPiece.y < spawnPiece.y) {
-                    curPiece.y++;
-                    if (!this._intersects(curPiece)) {
-                        if (this._pathFinding(curPiece, spawnPiece, test)) return true;
-                    }
-                    curPiece.y--;
-                }
-                
-                if (op == "l" || op == "r") {
-                    let offset = h[op];
-                    curPiece.x += offset;
-                    if (!this._intersects(curPiece)) {
-                        if (this._pathFinding(curPiece, spawnPiece, test)) return true;
-                    }
-                    curPiece.x = originPiece.x;
-                }
-
-                if (op == "cw" || op == "ccw") {
-                    let distance = Math.abs(spawnPiece.x - curPiece.x) + Math.abs(spawnPiece.y - curPiece.y);
-                    if (this._transformForPath(curPiece, kicks(curPiece, op)) != null) {
-                        let newDistance = Math.abs(spawnPiece.x - curPiece.x) + Math.abs(spawnPiece.y - curPiece.y);
-                        if (distance >= newDistance && this._pathFinding(curPiece, spawnPiece, test)) return true;
-                    }
-                    curPiece = originPiece;
-                }
-                test.pop();
+    _float(curPiece) {
+        curPiece.y--;
+        let result = !this._intersects(curPiece);
+        curPiece.y++;
+        return result;
+    }
+    isSkyReachable(piece) {
+        let [_, top] = ruleset.shapes[piece.type].spawn;
+        let oldY = piece.y;
+        let ret = true;
+        while(piece.y++ < top) {
+            if (this._intersects(piece)) {
+                ret = false;
+                break;
             }
-        } while (test.length > 0);
-        return false;
+        }
+
+        piece.y = oldY;
+        return ret;
+    }
+    // find path until reachable to sky
+    _pathFinding(curPiece, test) {
+        while (!this.isSkyReachable(curPiece)) {
+            if (this._spin != "none") {
+                return false;
+                // have to try spinning for the first step
+                // ...
+                this.setSpin("none");
+            }
+            else {
+                
+            }
+        }
+        return true;
     }
 
-    pathFinding(location) {
-        let { orientation, type, x:initX, y:initY} = location;
-        orientation = TBPorientationMapping[orientation];
+    pathFinding(location, spin) {
+        super.pathFinding(location, spin);
+
+        let curPiece = this._targetPeice;
+        let type = curPiece.type;
         let [x, y] = ruleset.shapes[type].spawn;
         let rotation = 'spawn';
         let spawnPiece = { type, x, y, rotation, ghostY: null };
-        let curPiece = { type, x: initX, y: initY, rotation: orientation, ghostY: null };
         let test = [];
         let steps = [];
-        if (this._pathFinding(curPiece, spawnPiece, test)) {
+        console.log(this._targetPeice);
+        if (this._pathFinding(curPiece, test)) {
+            if (this.piece.type != curPiece.type) {
+                steps.push("hold");
+            }
+            // simply move spawnPiece to curPiece position
+            if (curPiece.rotation == "reverse") {
+                steps.push("cw");
+                steps.push("cw");
+                this._transformForPath(spawnPiece, kicks(spawnPiece, "cw"));
+                this._transformForPath(spawnPiece, kicks(spawnPiece, "cw"));
+            }
+            if (curPiece.rotation == "right") {
+                steps.push("cw");
+                this._transformForPath(spawnPiece, kicks(spawnPiece, "cw"));
+            }
+            if (curPiece.rotation == "left") {
+                steps.push("ccw");
+                this._transformForPath(spawnPiece, kicks(spawnPiece, "ccw"));
+            }
+            while (spawnPiece.x != curPiece.x) {
+                if (spawnPiece.x > curPiece.x) {
+                    spawnPiece.x--;
+                    steps.push("left");
+                }
+                else {
+                    spawnPiece.x++;
+                    steps.push("right");
+                }
+            }
+            steps.push("sd");
             // reverse test ops and fill inputs
             while (test.length > 0) {
                 let op = reverseOp[test.pop()];
@@ -559,8 +589,12 @@ class PathFindingStacker extends TBPStacker {
                 steps.push(op);
             }
         }
+        else {
+            throw new Error("cannot drop this piece");
+        }
         if (steps.slice(-1) == "sd") steps.pop();
         steps.push("hd");
+        console.log("steps");
         console.log(steps);
         return steps;
     }
@@ -600,6 +634,7 @@ module.exports = {
     Stacker,
     RandomBagStacker,
     VSStacker,
+    PathFindingStacker,
     InstantMoveStacker,
     APPStacker,
     CheeseRaceStacker,
