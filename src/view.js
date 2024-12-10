@@ -1,6 +1,6 @@
-const stacker = require('./stacker');
-const rules = require('./ruleset');
-const theme = require('./theme');
+import * as stacker from './stacker.js';
+import ruleset from './ruleset.js';
+import theme from './theme.js';
 
 const CELL = 30;
 
@@ -23,10 +23,10 @@ class View {
     }
 
     resize() {
-        this.matrix.canvas.width = CELL * rules.cols;
-        this.matrix.canvas.height = CELL * rules.rows;
+        this.matrix.canvas.width = CELL * ruleset.cols;
+        this.matrix.canvas.height = CELL * ruleset.rows;
         this.garbage.canvas.width = CELL / 3;
-        this.garbage.canvas.height = CELL * rules.rows;
+        this.garbage.canvas.height = CELL * ruleset.rows;
         this.previews.canvas.width = CELL * 4;
         this.previews.canvas.height = CELL * 3 * 5;
         this.hold.canvas.width = CELL * 4;
@@ -43,13 +43,13 @@ class View {
 
         // horizontal and vertical grid lines
         ctx.beginPath();
-        for (let i = 1; i < rules.rows; i++) {
+        for (let i = 1; i < ruleset.rows; i++) {
             ctx.moveTo(0, i * CELL + .5);
-            ctx.lineTo(rules.cols * CELL, i * CELL + .5);
+            ctx.lineTo(ruleset.cols * CELL, i * CELL + .5);
         }
-        for (let i = 1; i < rules.cols; i++) {
+        for (let i = 1; i < ruleset.cols; i++) {
             ctx.moveTo(i * CELL + .5, 0);
-            ctx.lineTo(i * CELL + .5, rules.rows * CELL);
+            ctx.lineTo(i * CELL + .5, ruleset.rows * CELL);
         }
         ctx.strokeStyle = theme.grid[0];
         ctx.stroke();
@@ -57,9 +57,9 @@ class View {
         // crosses on grid intersections
         ctx.beginPath();
         let d = Math.floor(CELL * 0.3);
-        for (let i = 1; i < rules.rows; i++) {
+        for (let i = 1; i < ruleset.rows; i++) {
             let y = i * CELL + .5;
-            for (let j = 1; j < rules.cols; j++) {
+            for (let j = 1; j < ruleset.cols; j++) {
                 let x = j * CELL + .5;
                 ctx.moveTo(x - d, y); ctx.lineTo(x + d, y);
                 ctx.moveTo(x, y - d); ctx.lineTo(x, y + d);
@@ -71,9 +71,9 @@ class View {
         // outline around the edges
         ctx.beginPath();
         ctx.moveTo(0.5, 0.5);
-        ctx.lineTo(0.5, rules.rows * CELL - 0.5);
-        ctx.lineTo(rules.cols * CELL - 0.5, rules.rows * CELL - 0.5);
-        ctx.lineTo(rules.cols * CELL - 0.5, 0.5);
+        ctx.lineTo(0.5, ruleset.rows * CELL - 0.5);
+        ctx.lineTo(ruleset.cols * CELL - 0.5, ruleset.rows * CELL - 0.5);
+        ctx.lineTo(ruleset.cols * CELL - 0.5, 0.5);
         ctx.lineTo(0.5, 0.5);
         ctx.strokeStyle = theme.grid[2];
         ctx.stroke();
@@ -82,11 +82,11 @@ class View {
         let { ctx } = this.garbage;
         let { garbage } = this.stacker;
         let garbageNum = garbage.reduce(
-            (accumulator, currentValue) => accumulator + currentValue,
+            (accumulator, currentValue) => accumulator + currentValue.height,
             0,
           );
         for (let i = 0; i < garbageNum; i++) {
-            let y = (rules.rows - i - 1) * CELL;
+            let y = (ruleset.rows - i - 1) * CELL;
             ctx.fillStyle = theme.garbage;
             ctx.fillRect(0, y, 10, CELL);
         }
@@ -96,8 +96,8 @@ class View {
         let { matrix } = this.stacker;
 
         for (let i = 0; i < matrix.length; i++) {
-            let y = (rules.rows - i - 1) * CELL;
-            for (let j = 0; j < rules.cols; j++) {
+            let y = (ruleset.rows - i - 1) * CELL;
+            for (let j = 0; j < ruleset.cols; j++) {
                 let x = j * CELL;
                 let c = matrix[i][j];
                 if (c == '_') {
@@ -125,7 +125,7 @@ class View {
         ctx.beginPath();
         for (let [x, _y, gY] of coords) {
             let sx = x * CELL;
-            let sy = (rules.rows - gY - 1) * CELL;
+            let sy = (ruleset.rows - gY - 1) * CELL;
             ctx.rect(sx, sy, CELL, CELL);
         }
         ctx.globalAlpha = 0.4;
@@ -136,7 +136,7 @@ class View {
         ctx.beginPath();
         for (let [x, y, _gY] of coords) {
             let sx = x * CELL;
-            let sy = (rules.rows - y - 1) * CELL;
+            let sy = (ruleset.rows - y - 1) * CELL;
             ctx.rect(sx, sy, CELL, CELL);
         }
         ctx.globalAlpha = 1;
@@ -147,7 +147,7 @@ class View {
     _drawQueue(ctx, queue) {
         for (let i = 0; i < queue.length; i++) {
             let type = queue[i];
-            let coords = rules.shapes[type].coords;
+            let coords = ruleset.shapes[type].coords;
 
             // apply offset to minos to draw them roughly centered
             let ox, oy;
@@ -200,4 +200,4 @@ class View {
     }
 }
 
-module.exports = { View };
+export { View };

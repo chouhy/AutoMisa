@@ -1,4 +1,4 @@
-{
+const ruleset = {
     "previews": 5,
     "cheese": {
         "min": 4,
@@ -63,4 +63,6 @@
             "offsets": "O"
         }
     }
-}
+};
+
+export default ruleset;

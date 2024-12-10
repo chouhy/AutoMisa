@@ -3,8 +3,8 @@ not done yet
 
 Allow [TBP](https://github.com/tetris-bot-protocol/tbp-spec) supported bot plays survival mode, which is just something to look at when commuting.
 
-## Compile
+## Install
 
-To compile AutoMisa, run the following command:
+To install AutoMisa(copy to static), run the following command: 
 
-``` ./build-dpkg.sh ```
+``` ./install.sh ```
