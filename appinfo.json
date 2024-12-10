@@ -1,0 +1,7 @@
+{
+  "name": "blockfish-visualizer",
+  "version": "1.0.1-autoMisa",
+  "description": "Blockfish visualizer for autoMisa",
+  "authors": ["iitalics", "chouhy"],
+  "license": "ISC"
+}

@@ -10,11 +10,12 @@ class Attack {
             nospinAtk: [],
         });
     }
-    apply(combos, b2b, clearline, spin, type) {
+    apply(combos, b2b, clearline, spin, type, isAllClear) {
         return 0;
     }
 }
 // https://harddrop.com/wiki/Puyo_Puyo_Tetris#Tetris_vs_Tetris_(Versus)
+// Perfect Clears always sent 10 lines.
 class PPTAttack extends Attack {
     constructor() {
         super();
@@ -22,15 +23,15 @@ class PPTAttack extends Attack {
         this.b2bList = [1];
         this.pc = 10;
         this.b2bPiece = {
-            "I": true,
             "T":true,
         };
         this.spinAtk = [2,4,6];
         this.nospinAtk = [0,1,2,4];
     }
-    apply(combos, b2b, clearline, spin, type) {
+    apply(combos, b2b, clearline, spin, type, isAllClear) {
         let atk = 0;
         if (clearline == 0) return atk;
+        if (isAllClear) return this.pc;
         if (combos > 0) {
             atk += this.comboList[Math.min(this.comboList.length-1, combos-1)];
         }
@@ -44,7 +45,4 @@ class PPTAttack extends Attack {
         return atk;
     }
 }
-module.exports = {
-    Attack,
-    PPTAttack,
-};
+export { Attack, PPTAttack};

@@ -1,4 +1,4 @@
-const ruleset = require('./ruleset');
+import ruleset from './ruleset.js';
 
 class Stacker {
     constructor() {
@@ -278,14 +278,16 @@ class VSStacker extends RandomBagStacker {
 
     setAtkCal(atkCal) {
         this._atkCal = atkCal;
+        this._b2bPiece = atkCal.b2bPiece;
     }
 
-    setb2bPiece(b2b) {
-        this._b2bPiece = b2b;
-    }
 
     setSpin(spin) {
         this._spin = spin;
+    }
+
+    isAllClear() {
+        return this.matrix.length == 0;
     }
 
     _addGarbage(height, col) {
@@ -321,14 +323,14 @@ class VSStacker extends RandomBagStacker {
         if (op === 'hd') {
             // same as combo 2 consecutive b2b is b2bx1
             if (this.clear > 0) {
-                if (!this._b2bPiece[this._prevType]) {
+                // tetris is always b2b
+                if (this._prevType == "I" && this.clear == 4)
+                    this.b2b++;
+                else if (!this._b2bPiece[this._prevType]) {
                     this.b2b = -1;
                 }
                 else {
-                    if (this._prevType == "I" && this.clear < 4) {
-                        this.b2b = -1;
-                    }
-                    else if (this._prevType == "T" && this._spin == "none") {
+                    if (this._spin == "none") {
                         this.b2b = -1;
                     }
                     else {
@@ -345,7 +347,7 @@ class VSStacker extends RandomBagStacker {
                     console.log("b2b:"+this.b2b);
                     console.log("combos:"+this.combos);
                     console.log("clear:"+this.clear);
-                    this._cancel(this._atkCal.apply(this.combos, this.b2b, this.clear, this._spin, this._prevType));
+                    this._cancel(this._atkCal.apply(this.combos, this.b2b, this.clear, this._spin, this._prevType, this.isAllClear()));
                 }
                 return;
             }
@@ -557,70 +559,61 @@ class PathFindingStacker extends TBPStacker {
     }
     // find path until reachable to sky
     _pathFinding(curPiece, test) {
-        if (!this.isSkyReachable(curPiece)) {
-            // if (this._spin != "none") {
-            //     return false;
-            //     // have to try spinning for the first step
-            //     // ...
-            //     this.setSpin("none");
-            // }
-            // else {
-                for (let op of ops) {
-                    let lastOp;
-                    switch(op){
-                    case "up":
-                        curPiece.y++;
-                        if (!this._intersects(curPiece)) {
-                            test.push({op:op});
-                            if(this._pathFinding(curPiece, test)) return true;
-                            test.pop();
-                        }
-                        curPiece.y--;
-                        break;
-                    case "l":
-                    case "r":
-                        let dx = (op == "l") ? -1 : 1;
-                        lastOp = test.at(-1);
-                        // prevent infinite lrlrlr movement
-                        if (lastOp && (lastOp.op == "l" || lastOp.op == "r") && lastOp.op != op) continue;
-                        let oldX = curPiece.x;
-                        curPiece.x += dx;
-                        
-                        while (!this._intersects(curPiece)) {
-                            test.push({op:op});
-                            if (!this._isFloating(curPiece) && this._pathFinding(curPiece, test)) return true;
-                            curPiece.x += dx;
-                        }
-                        while (test.length > 0 && test.at(-1).op == op) test.pop();
-                        curPiece.x = oldX;
-                        break;
-                    case "cw":
-                    case "ccw":
-                        lastOp = test.at(-1);
-                        // attempts in options are tested, no intersections
-                        let options = this._getTransformOptions(curPiece, op);
-                        let { x, y, rotation } = curPiece;
-                        for (let i = options.length-1; i >= 0; i--) {
-                            // prevent infinite cw cww loop
-                            if (lastOp && (lastOp.op == "cw" || lastOp.op == "ccw") && lastOp.op != op && lastOp.idx == options[i])
-                                continue;
-                            this._transformSimple(curPiece, kicks(curPiece, op), options[i]);
-                            test.push({op:op, idx:options[i]});
-                            if (this._pathFinding(curPiece, test)) return true;
-                            // reset
-                            curPiece.x = x;
-                            curPiece.y = y;
-                            curPiece.rotation = rotation;
-                            test.pop();
-                        }
-                        break;
-                    default:
-                    }
+        if (this.isSkyReachable(curPiece)) 
+            return true;
+        for (let op of ops) {
+            let lastOp;
+            switch(op){
+            case "up":
+                curPiece.y++;
+                if (!this._intersects(curPiece)) {
+                    test.push({op:op});
+                    if(this._pathFinding(curPiece, test)) return true;
+                    test.pop();
                 }
-                return false;
-            // }
+                curPiece.y--;
+                break;
+            case "l":
+            case "r":
+                let dx = (op == "l") ? -1 : 1;
+                lastOp = test.at(-1);
+                // prevent infinite lrlrlr movement
+                if (lastOp && (lastOp.op == "l" || lastOp.op == "r") && lastOp.op != op) continue;
+                let oldX = curPiece.x;
+                curPiece.x += dx;
+                
+                while (!this._intersects(curPiece)) {
+                    test.push({op:op});
+                    if (!this._isFloating(curPiece) && this._pathFinding(curPiece, test)) return true;
+                    curPiece.x += dx;
+                }
+                while (test.length > 0 && test.at(-1).op == op) test.pop();
+                curPiece.x = oldX;
+                break;
+            case "cw":
+            case "ccw":
+                lastOp = test.at(-1);
+                // attempts in options are tested, no intersections
+                let options = this._getTransformOptions(curPiece, op);
+                let { x, y, rotation } = curPiece;
+                for (let i = options.length-1; i >= 0; i--) {
+                    // prevent infinite cw cww loop
+                    if (lastOp && (lastOp.op == "cw" || lastOp.op == "ccw") && lastOp.op != op && lastOp.idx == options[i])
+                        continue;
+                    this._transformSimple(curPiece, kicks(curPiece, op), options[i]);
+                    test.push({op:op, idx:options[i]});
+                    if (this._pathFinding(curPiece, test)) return true;
+                    // reset
+                    curPiece.x = x;
+                    curPiece.y = y;
+                    curPiece.rotation = rotation;
+                    test.pop();
+                }
+                break;
+            default:
+            }
         }
-        return true;
+        return false;
     }
 
     pathFinding(location, spin) {
@@ -634,7 +627,7 @@ class PathFindingStacker extends TBPStacker {
         let test = [];
         let steps = [];
         curPiece._float = false;
-        console.log(this._targetPeice);
+        // console.log(this._targetPeice);
         if (this._pathFinding(curPiece, test)) {
             if (this.piece.type != curPiece.type) {
                 steps.push("hold");
@@ -677,13 +670,13 @@ class PathFindingStacker extends TBPStacker {
         }
         if (steps.slice(-1) == "sd") steps.pop();
         steps.push("hd");
-        console.log("steps");
-        console.log(steps);
+        // console.log("steps");
+        // console.log(steps);
         return steps;
     }
 }
 // attack per peice
-class APPStacker extends InstantMoveStacker {
+class APPStacker extends PathFindingStacker {
     constructor() {
         super();
         Object.assign(this, {
@@ -713,7 +706,7 @@ class APPStacker extends InstantMoveStacker {
     }
 }
 
-module.exports = {
+export {
     Stacker,
     RandomBagStacker,
     VSStacker,
