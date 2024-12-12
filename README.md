@@ -4,6 +4,6 @@ Allow [TBP](https://github.com/tetris-bot-protocol/tbp-spec) supported bot plays
 
 ## Install
 
-To install AutoMisa(copy to static), run the following command: 
+To install(copy to static), run the following command: 
 
 ``` ./install.sh ```
