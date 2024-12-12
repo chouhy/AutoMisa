@@ -264,7 +264,7 @@ class VSStacker extends RandomBagStacker {
     constructor() {
         super();
         Object.assign(this, { 
-            // garbage = { height, column}
+            // garbage = { height, col}
             garbage: [],
             combos: 0,
             garbageTick: false,
@@ -339,6 +339,7 @@ class VSStacker extends RandomBagStacker {
                 }
             }
             
+            this.garbageTick = false;
             if (this.comboing) {
                 if (this._atkCal) {
                     console.log("peice:"+this._prevType);
@@ -351,7 +352,6 @@ class VSStacker extends RandomBagStacker {
                 }
                 return;
             }
-            this.garbageTick = false;
             while (this.garbage.length > 0) {
                 this.garbageTick = true;
                 let g = this.garbage.shift();
