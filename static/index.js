@@ -4,7 +4,7 @@ import { View } from './view.js';
 let stacker = new APPStacker;
 // stacker.specificBoardState();
 stacker.spawn();
-// stacker.setGarbageList([1, 0, 0, 0, 1, 0]);
+stacker.setGarbageList([1, 0, 0, 2, 0, 0, 1, 0]);
 
 let bot;
 
@@ -16,6 +16,9 @@ let drawing = {
     hold: document.getElementById('hold'),
     previews: document.getElementById('previews'),
 };
+
+let gameMsg = {"type":"start","hold":null,"combo":0,"back_to_back":false,"board":getEmptyBoard()};
+gameMsg["queue"] = (stacker.piece.type+stacker.queue).split("");
 
 let view = new View(stacker, drawing);
 view.resize();
@@ -40,15 +43,17 @@ function animate() {
         }
         // update the whole board
         else {
+            // bot.postMessage({"type":"stop"});
             gameMsg["board"] = getEmptyBoard();
             let curBoard = stacker.convertBoard(gameMsg["board"]);
             // console.log("curBoard");
-            // console.log(curBoard);
             gameMsg["back_to_back"] = stacker.b2b >= 0;
             gameMsg["queue"] = (stacker.piece.type+stacker.queue).split("");
-            gameMsg["combo"] = stacker.combos;
+            // no combo = 0, internal no combo = -1
+            gameMsg["combo"] = stacker.combos +1 ;
             gameMsg["hold"] = stacker.hold == '' ? null : stacker.hold;
             // console.log("update board");
+            // console.log(gameMsg);
             // console.log(gameMsg);
             // gameMsg["back_to_back_num"] = stacker.b2b;
             bot.postMessage(gameMsg);
@@ -57,14 +62,14 @@ function animate() {
         // send tbp request to bot
         // count++;
         // if (count < 6)
-        getSuggest();
+        setTimeout(getSuggest, 200);
         return;
     }
     // inputs.shift();
     stacker.apply(inputs.shift());
     view.draw();
 }
-setInterval(animate, 100);
+setInterval(animate, 70);
 
 // document.getElementById("next").addEventListener("click", function() {
 //     console.log(this.id);
@@ -84,8 +89,7 @@ export function start(botPath, atk) {
     stacker.setAtkCal(atk);
     
     
-    let gameMsg = {"type":"start","hold":null,"combo":0,"back_to_back":false,"board":getEmptyBoard()};
-    gameMsg["queue"] = (stacker.piece.type+stacker.queue).split("");
+
     //"queue":["I","T","I","L","O","Z"]
     // stacker.convertBoard(gameMsg["board"]);
     // console.log(gameMsg);
@@ -101,7 +105,7 @@ export function start(botPath, atk) {
                 break;
             case "ready":
                 bot.postMessage(gameMsg);
-                setTimeout(getSuggest, 500);
+                setTimeout(getSuggest, 200);
                 break;
             // do pathfinding and push to inputs then animate will process steps inside
             case "suggestion":
